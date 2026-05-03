@@ -65,7 +65,7 @@ function Index() {
             href="https://t.me/"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-9 inline-flex items-center gap-2 rounded-full bg-[image:var(--gradient-primary)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:scale-[1.03] active:scale-100"
+            className="mt-9 inline-flex items-center gap-2 rounded-full bg-[image:var(--gradient-action)] px-8 py-4 text-base font-semibold text-[color:var(--action-foreground)] shadow-[var(--shadow-action)] transition hover:bg-[color:var(--action-hover)] hover:scale-[1.03] active:scale-100"
           >
             <Send className="h-5 w-5" />
             Quero Receber
@@ -138,7 +138,7 @@ function Index() {
               href="https://t.me/"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative mt-8 inline-flex items-center gap-2 rounded-full bg-[image:var(--gradient-primary)] px-8 py-4 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:scale-[1.03]"
+              className="relative mt-8 inline-flex items-center gap-2 rounded-full bg-[image:var(--gradient-action)] px-8 py-4 font-semibold text-[color:var(--action-foreground)] shadow-[var(--shadow-action)] transition hover:bg-[color:var(--action-hover)] hover:scale-[1.03]"
             >
               <Send className="h-5 w-5" />
               Quero Receber
