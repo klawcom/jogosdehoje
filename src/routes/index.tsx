@@ -5,8 +5,10 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Futebol Hoje — Jogos do dia no Telegram" },
+      { title: "Jogos de Hoje — Futebol do dia no Telegram" },
       { name: "description", content: "Receba os jogos de futebol do dia, horários e onde assistir, automaticamente no Telegram." },
+      { property: "og:title", content: "Jogos de Hoje" },
+      { property: "og:description", content: "Saiba horários e onde assistir aos jogos do dia, direto no Telegram." },
     ],
   }),
 });
