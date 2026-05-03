@@ -74,8 +74,7 @@ function Index() {
 
           {/* Mock telegram card */}
           <div className="relative mt-16 w-full max-w-md">
-            <div className="absolute inset-0 -z-10 rounded-3xl bg-primary/20 blur-3xl" />
-            <div className="rounded-3xl border border-border bg-card/80 p-5 text-left shadow-[var(--shadow-card)] backdrop-blur">
+            <div className="rounded-2xl border border-border bg-card p-5 text-left shadow-[var(--shadow-card)]">
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[image:var(--gradient-primary)]">
                   <Trophy className="h-4 w-4 text-primary-foreground" />
