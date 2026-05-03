@@ -113,7 +113,7 @@ function Index() {
             {features.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="group rounded-2xl border border-border bg-card/50 p-6 backdrop-blur transition hover:-translate-y-1 hover:border-primary/50"
+                className="group rounded-xl border border-border bg-card p-6 transition hover:border-primary/50"
               >
                 <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary transition group-hover:bg-[image:var(--gradient-primary)] group-hover:text-primary-foreground">
                   <Icon className="h-5 w-5" />
