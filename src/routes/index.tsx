@@ -20,7 +20,7 @@ function Logo() {
         <Trophy className="h-5 w-5 text-primary-foreground" />
       </div>
       <span className="text-lg font-bold tracking-tight">
-        Futebol<span className="text-primary">Hoje</span>
+        Jogos<span className="text-primary">deHoje</span>
       </span>
     </div>
   );
