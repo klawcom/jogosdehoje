@@ -82,7 +82,7 @@ function Index() {
                   <Trophy className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Futebol Hoje</p>
+                  <p className="text-sm font-semibold">Jogos de Hoje</p>
                   <p className="text-[10px] text-muted-foreground">bot · agora</p>
                 </div>
               </div>
@@ -148,7 +148,7 @@ function Index() {
       </main>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Futebol Hoje · Feito para apaixonados por futebol
+        © {new Date().getFullYear()} Jogos de Hoje · Feito para apaixonados por futebol
       </footer>
     </div>
   );
