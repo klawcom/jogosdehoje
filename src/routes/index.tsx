@@ -5,8 +5,10 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Futebol Hoje — Jogos do dia no Telegram" },
+      { title: "Jogos de Hoje — Futebol do dia no Telegram" },
       { name: "description", content: "Receba os jogos de futebol do dia, horários e onde assistir, automaticamente no Telegram." },
+      { property: "og:title", content: "Jogos de Hoje" },
+      { property: "og:description", content: "Saiba horários e onde assistir aos jogos do dia, direto no Telegram." },
     ],
   }),
 });
@@ -18,7 +20,7 @@ function Logo() {
         <Trophy className="h-5 w-5 text-primary-foreground" />
       </div>
       <span className="text-lg font-bold tracking-tight">
-        Futebol<span className="text-primary">Hoje</span>
+        Jogos<span className="text-primary">deHoje</span>
       </span>
     </div>
   );
@@ -80,7 +82,7 @@ function Index() {
                   <Trophy className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Futebol Hoje</p>
+                  <p className="text-sm font-semibold">Jogos de Hoje</p>
                   <p className="text-[10px] text-muted-foreground">bot · agora</p>
                 </div>
               </div>
@@ -146,7 +148,7 @@ function Index() {
       </main>
 
       <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Futebol Hoje · Feito para apaixonados por futebol
+        © {new Date().getFullYear()} Jogos de Hoje · Feito para apaixonados por futebol
       </footer>
     </div>
   );
