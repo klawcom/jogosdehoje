@@ -33,7 +33,7 @@ const features = [
 
 function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ background: "var(--gradient-hero)" }}>
+    <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
         <a
