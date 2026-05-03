@@ -127,8 +127,7 @@ function Index() {
 
         {/* Final CTA */}
         <section className="pb-24">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-10 text-center backdrop-blur sm:p-16">
-            <div className="absolute -top-20 left-1/2 -z-0 h-60 w-60 -translate-x-1/2 rounded-full bg-primary/30 blur-3xl" />
+          <div className="rounded-2xl border border-border bg-card p-10 text-center sm:p-16">
             <h2 className="relative text-3xl font-bold sm:text-4xl">Pronto para nunca mais perder um jogo?</h2>
             <p className="relative mx-auto mt-3 max-w-md text-muted-foreground">
               Entre no canal e receba os jogos do dia automaticamente.
