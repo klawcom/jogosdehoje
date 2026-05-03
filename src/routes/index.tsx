@@ -33,7 +33,7 @@ const features = [
 
 function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ background: "var(--gradient-hero)" }}>
+    <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
         <a
@@ -74,8 +74,7 @@ function Index() {
 
           {/* Mock telegram card */}
           <div className="relative mt-16 w-full max-w-md">
-            <div className="absolute inset-0 -z-10 rounded-3xl bg-primary/20 blur-3xl" />
-            <div className="rounded-3xl border border-border bg-card/80 p-5 text-left shadow-[var(--shadow-card)] backdrop-blur">
+            <div className="rounded-2xl border border-border bg-card p-5 text-left shadow-[var(--shadow-card)]">
               <div className="mb-3 flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[image:var(--gradient-primary)]">
                   <Trophy className="h-4 w-4 text-primary-foreground" />
@@ -114,7 +113,7 @@ function Index() {
             {features.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="group rounded-2xl border border-border bg-card/50 p-6 backdrop-blur transition hover:-translate-y-1 hover:border-primary/50"
+                className="group rounded-xl border border-border bg-card p-6 transition hover:border-primary/50"
               >
                 <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary transition group-hover:bg-[image:var(--gradient-primary)] group-hover:text-primary-foreground">
                   <Icon className="h-5 w-5" />
@@ -128,8 +127,7 @@ function Index() {
 
         {/* Final CTA */}
         <section className="pb-24">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card/60 p-10 text-center backdrop-blur sm:p-16">
-            <div className="absolute -top-20 left-1/2 -z-0 h-60 w-60 -translate-x-1/2 rounded-full bg-primary/30 blur-3xl" />
+          <div className="rounded-2xl border border-border bg-card p-10 text-center sm:p-16">
             <h2 className="relative text-3xl font-bold sm:text-4xl">Pronto para nunca mais perder um jogo?</h2>
             <p className="relative mx-auto mt-3 max-w-md text-muted-foreground">
               Entre no canal e receba os jogos do dia automaticamente.
