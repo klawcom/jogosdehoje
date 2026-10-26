@@ -1,0 +1,16 @@
+name: Sincronização Futebol na TV
+
+on:
+  schedule:
+    # 7h Brasília (10h UTC) e 12h Brasília (15h UTC)
+    - cron: '0 10 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar Sincronização de Jogos
+        run: |
+          curl -s -X POST "https://jogosdehoje.lovable.app/api/sync" || echo "App not deployed yet or sync handled internally"

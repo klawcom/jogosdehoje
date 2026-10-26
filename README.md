@@ -1,60 +1,53 @@
-# Futebol Hoje Alertas
+# Futebol na TV ⚽📺
 
-Crie uma landing page moderna para um micro SaaS chamado Futebol Hoje.
+App web moderno, mobile-first e em modo escuro para consultar a programação completa dos jogos de futebol do dia no horário de Brasília, com canais de transmissão (TV Aberta, TV Fechada e Streaming).
 
-Objetivo:
-Enviar automaticamente os jogos de futebol do dia para usuários via Telegram.
+**Live App**: [https://jogosdehoje.lovable.app](https://jogosdehoje.lovable.app)
 
-A página deve conter:
+---
 
-Logo simples
+## 🌟 Funcionalidades
 
-Título grande:
-"Receba os jogos do dia no Telegram"
+- 📅 **Navegação por Datas**: Abre direto no dia de hoje com setas e abas rápidas para navegar entre os dias disponíveis (Hoje, Amanhã, etc.).
+- 🏆 **Agrupamento por Campeonato**: Partidas organizadas por competição e ordenadas cronologicamente por horário de Brasília (UTC-3).
+- 🏷️ **Canais em Selos Coloridos**:
+  - 🟢 **TV Aberta**: Globo, SBT, Band, Record, TV Brasil, TV Cultura.
+  - 🔵 **TV Fechada**: SporTV, ESPN, Premiere, TNT, BandSports.
+  - 🟣 **Streaming**: Disney+, Max, Prime Video, CazéTV, Globoplay, Paramount+, YouTube.
+- 🔍 **Busca em Tempo Real**: Encontre partidas digitando o nome do time.
+- 🎛️ **Filtros Avançados**: Filtre por campeonato ou por tipo de transmissão com um clique.
+- ⭐ **Times Favoritos Fixados no Topo**: Favorite seus clubes e acompanhe seus jogos em destaque no topo da tela (`localStorage`).
+- 📲 **Compartilhar no WhatsApp**: Botão flutuante que gera e envia o resumo formatado das partidas do dia com emojis.
+- 🔄 **Sincronização Agendada (7h e 12h de Brasília)**: Raspador automatizado que consome a programação oficial do Goal.com e atualiza o banco de dados.
 
-Subtítulo:
-"Saiba horários e onde assistir aos jogos automaticamente."
+---
 
-Botão principal:
-"Quero Receber"
+## 🗄️ Banco de Dados (Supabase)
 
-Sessão explicando:
+O script completo para recriar as tabelas está localizado em [`supabase/schema.sql`](supabase/schema.sql):
 
-Jogos do dia
+- **`matches`**: Partidas com data, campeonato, times, horário e canais normalizados.
+- **`sync_logs`**: Histórico das sincronizações com status e total de jogos.
 
-Horários
+### Agendamento automático via pg_cron:
+- 07:00 Brasília (10:00 UTC): `0 10 * * *`
+- 12:00 Brasília (15:00 UTC): `0 15 * * *`
 
-Onde assistir
+---
 
-Alertas automáticos
+## 🚀 Como Rodar Localmente
 
-Design moderno estilo startup
+```bash
+# Instalar dependências
+bun install # ou npm install
 
-Tema escuro
+# Rodar servidor de desenvolvimento
+bun run dev # ou npm run dev
 
-Responsivo para celular
-
-Visual parecido com aplicativos esportivos modernos
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://jogosdehoje.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b553078a-7704-4161-b947-cfc161405525).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+# Build de produção
+bun run build # ou npm run build
 ```
+
+---
+
+Built with [Lovable](https://lovable.dev) & TanStack Start.
