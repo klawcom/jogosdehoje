@@ -13,7 +13,6 @@ import {
   Trophy,
   Heart,
   Calendar,
-  ExternalLink,
   ChevronRight as ChevronRightIcon,
   Tv,
 } from "lucide-react";
@@ -57,22 +56,133 @@ export const Route = createFileRoute("/")({
 
 const POPULAR_TEAMS = [
   "Flamengo",
+  "Grêmio",
   "Palmeiras",
   "Corinthians",
   "São Paulo",
   "Vasco",
   "Fluminense",
   "Botafogo",
-  "Grêmio",
   "Internacional",
   "Cruzeiro",
   "Atlético-MG",
   "Santos",
+  "Coritiba",
+  "América-MG",
+  "Cuiabá",
+  "Juventude",
+  "Náutico",
   "Real Madrid",
   "Barcelona",
   "Boca Juniors",
   "River Plate",
+  "Estudiantes",
+  "Union Santa Fe",
 ];
+
+// Color sequence themes for time slot differentiation
+interface TimeSlotTheme {
+  name: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
+  iconBg: string;
+  iconText: string;
+  cardBorder: string;
+  cardHover: string;
+  cardGlow: string;
+  cardBgGradient: string;
+  timeBadgeBg: string;
+  timeBadgeText: string;
+  timeBadgeBorder: string;
+}
+
+function getTimeSlotTheme(slotIndex: number): TimeSlotTheme {
+  const themes: TimeSlotTheme[] = [
+    // 1. Esmeralda / Verde (Padrão Principal do Site)
+    {
+      name: "emerald",
+      badgeBg: "bg-emerald-500/15",
+      badgeText: "text-emerald-400",
+      badgeBorder: "border-emerald-500/30",
+      iconBg: "bg-emerald-500/20",
+      iconText: "text-emerald-400",
+      cardBorder: "border-emerald-500/25",
+      cardHover: "hover:border-emerald-400/60",
+      cardGlow: "hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]",
+      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
+      timeBadgeBg: "bg-emerald-500/15",
+      timeBadgeText: "text-emerald-300",
+      timeBadgeBorder: "border-emerald-500/40",
+    },
+    // 2. Azul Céu (Padrão TV Fechada)
+    {
+      name: "sky",
+      badgeBg: "bg-sky-500/15",
+      badgeText: "text-sky-400",
+      badgeBorder: "border-sky-500/30",
+      iconBg: "bg-sky-500/20",
+      iconText: "text-sky-400",
+      cardBorder: "border-sky-500/25",
+      cardHover: "hover:border-sky-400/60",
+      cardGlow: "hover:shadow-[0_0_20px_rgba(14,165,233,0.12)]",
+      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
+      timeBadgeBg: "bg-sky-500/15",
+      timeBadgeText: "text-sky-300",
+      timeBadgeBorder: "border-sky-500/40",
+    },
+    // 3. Roxo / Violeta (Padrão Streaming)
+    {
+      name: "violet",
+      badgeBg: "bg-violet-500/15",
+      badgeText: "text-violet-400",
+      badgeBorder: "border-violet-500/30",
+      iconBg: "bg-violet-500/20",
+      iconText: "text-violet-400",
+      cardBorder: "border-violet-500/25",
+      cardHover: "hover:border-violet-400/60",
+      cardGlow: "hover:shadow-[0_0_20px_rgba(168,85,247,0.12)]",
+      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
+      timeBadgeBg: "bg-violet-500/15",
+      timeBadgeText: "text-violet-300",
+      timeBadgeBorder: "border-violet-500/40",
+    },
+    // 4. Dourado / Âmbar (Padrão Destaques & Favoritos)
+    {
+      name: "amber",
+      badgeBg: "bg-amber-500/15",
+      badgeText: "text-amber-400",
+      badgeBorder: "border-amber-500/30",
+      iconBg: "bg-amber-500/20",
+      iconText: "text-amber-400",
+      cardBorder: "border-amber-500/25",
+      cardHover: "hover:border-amber-400/60",
+      cardGlow: "hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]",
+      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
+      timeBadgeBg: "bg-amber-500/15",
+      timeBadgeText: "text-amber-300",
+      timeBadgeBorder: "border-amber-500/40",
+    },
+    // 5. Turquesa / Teal (Padrão Especial)
+    {
+      name: "teal",
+      badgeBg: "bg-teal-500/15",
+      badgeText: "text-teal-400",
+      badgeBorder: "border-teal-500/30",
+      iconBg: "bg-teal-500/20",
+      iconText: "text-teal-400",
+      cardBorder: "border-teal-500/25",
+      cardHover: "hover:border-teal-400/60",
+      cardGlow: "hover:shadow-[0_0_20px_rgba(20,184,166,0.12)]",
+      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
+      timeBadgeBg: "bg-teal-500/15",
+      timeBadgeText: "text-teal-300",
+      timeBadgeBorder: "border-teal-500/40",
+    },
+  ];
+
+  return themes[slotIndex % themes.length];
+}
 
 function JogosDeHoje() {
   const loaderData = Route.useLoaderData();
@@ -88,13 +198,12 @@ function JogosDeHoje() {
   const [selectedChannelType, setSelectedChannelType] = useState<ChannelType | "all">("all");
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
 
-  // Selected match for the Match Details modal/page
+  // Active match for details modal/page
   const [activeMatch, setActiveMatch] = useState<MatchItem | null>(null);
 
   const { favorites, toggleFavorite, isFavorite, matchHasFavorite } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
 
-  // Set today as active index initially
   useEffect(() => {
     if (days && days.length > 0) {
       const todayIdx = days.findIndex((d) => d.isToday);
@@ -122,7 +231,6 @@ function JogosDeHoje() {
     }
   };
 
-  // Available unique championships for active day
   const availableChampionships = useMemo(() => {
     if (!currentDay) return [];
     const set = new Set<string>();
@@ -132,12 +240,10 @@ function JogosDeHoje() {
     return Array.from(set).sort();
   }, [currentDay]);
 
-  // Filtered matches
   const filteredMatches = useMemo(() => {
     if (!currentDay) return [];
 
     return currentDay.matches.filter((match) => {
-      // 1. Search filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = match.match_title.toLowerCase().includes(q);
@@ -149,12 +255,10 @@ function JogosDeHoje() {
         }
       }
 
-      // 2. Championship filter
       if (selectedChampionship !== "all" && match.championship !== selectedChampionship) {
         return false;
       }
 
-      // 3. Channel Type filter
       if (selectedChannelType !== "all") {
         const hasType = match.channel_types.includes(selectedChannelType);
         if (!hasType) return false;
@@ -164,16 +268,13 @@ function JogosDeHoje() {
     });
   }, [currentDay, searchQuery, selectedChampionship, selectedChannelType]);
 
-  // Favorite matches
   const favoriteMatches = useMemo(() => {
     return filteredMatches.filter((m) => matchHasFavorite(m));
   }, [filteredMatches, matchHasFavorite]);
 
-  // SEQUENCE OF CARDS ORDERED BY TIME (HORÁRIO), NOT CHAMPIONSHIP!
+  // SEQUÊNCIA DE CARDS POR HORÁRIO
   const groupedByTime = useMemo(() => {
     const timeMap = new Map<string, MatchItem[]>();
-
-    // First sort all matches chronologically
     const sorted = [...filteredMatches].sort((a, b) => a.time_br.localeCompare(b.time_br));
 
     for (const match of sorted) {
@@ -189,9 +290,7 @@ function JogosDeHoje() {
       groups.push({ time, matches });
     });
 
-    // Ensure sorted chronologically
     groups.sort((a, b) => a.time.localeCompare(b.time));
-
     return groups;
   }, [filteredMatches]);
 
@@ -224,7 +323,7 @@ function JogosDeHoje() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
-      {/* Ambient background glow */}
+      {/* Top ambient glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-56 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
 
       {/* HEADER: Jogos de Hoje */}
@@ -240,7 +339,7 @@ function JogosDeHoje() {
                 <h1 className="text-lg font-black tracking-tight sm:text-xl text-white">
                   Jogos <span className="text-primary font-black">de Hoje</span>
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/25">
+                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/25">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Brasília (UTC-3)
                 </span>
@@ -268,7 +367,7 @@ function JogosDeHoje() {
             <button
               type="button"
               onClick={() => setShowFavoritesModal(true)}
-              className="relative flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
+              className="relative flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-3 py-2 text-xs font-bold text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
               title="Meus times favoritos"
             >
               <Star
@@ -297,7 +396,7 @@ function JogosDeHoje() {
 
       {/* MAIN CONTAINER */}
       <main className="relative z-10 mx-auto max-w-3xl px-3 sm:px-6 pt-3">
-        {/* DATE NAVIGATION BAR */}
+        {/* DATE SELECTOR BAR */}
         <section className="mb-3 rounded-2xl border border-border bg-card/80 p-2.5 backdrop-blur-md shadow-md">
           <div className="flex items-center justify-between gap-2">
             <button
@@ -363,7 +462,6 @@ function JogosDeHoje() {
 
         {/* SEARCH & FILTERS */}
         <section className="mb-4 space-y-2.5">
-          {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <input
@@ -514,6 +612,7 @@ function JogosDeHoje() {
                   isLiked={isLiked(match.id)}
                   likeCount={getLikeCount(match.id)}
                   onToggleLike={() => toggleLike(match.id)}
+                  theme={getTimeSlotTheme(3)} // Gold/Amber theme for favorites
                   highlightFavorite
                 />
               ))}
@@ -521,46 +620,51 @@ function JogosDeHoje() {
           </section>
         )}
 
-        {/* MAIN LIST: ORDERED BY TIME (HORÁRIO) */}
+        {/* SEQUÊNCIA DE CARDS POR HORÁRIO COM CORES DIFERENCIADAS */}
         {groupedByTime.length > 0 ? (
           <div className="space-y-4">
-            {groupedByTime.map(({ time, matches }) => (
-              <section key={time} className="space-y-2">
-                {/* Time slot header */}
-                <div className="flex items-center justify-between border-b border-border/80 pb-1 px-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-                      <Clock className="h-3.5 w-3.5" />
-                    </span>
-                    <h3 className="font-extrabold text-sm sm:text-base text-white tracking-wide">
-                      {time} <span className="text-xs font-medium text-muted-foreground">(Brasília)</span>
-                    </h3>
-                  </div>
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    {matches.length} {matches.length === 1 ? "jogo" : "jogos"}
-                  </span>
-                </div>
+            {groupedByTime.map(({ time, matches }, slotIdx) => {
+              const theme = getTimeSlotTheme(slotIdx);
 
-                {/* Match Cards in this time slot */}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {matches.map((match) => (
-                    <CompactMatchCard
-                      key={match.id}
-                      match={match}
-                      isFavorite={isFavorite}
-                      onToggleFavorite={toggleFavorite}
-                      onOpenDetails={() => setActiveMatch(match)}
-                      isLiked={isLiked(match.id)}
-                      likeCount={getLikeCount(match.id)}
-                      onToggleLike={() => toggleLike(match.id)}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
+              return (
+                <section key={time} className="space-y-2">
+                  {/* Time slot header diferenciado por cor seguindo o padrão */}
+                  <div className="flex items-center justify-between border-b border-border/80 pb-1.5 px-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${theme.iconBg} ${theme.iconText} shadow-sm ring-1 ring-white/10`}>
+                        <Clock className="h-3.5 w-3.5" />
+                      </span>
+                      <h3 className="font-black text-sm sm:text-base text-white tracking-wide flex items-center gap-1.5">
+                        <span className={theme.badgeText}>{time}</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">(Brasília)</span>
+                      </h3>
+                    </div>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText} border ${theme.badgeBorder}`}>
+                      {matches.length} {matches.length === 1 ? "jogo" : "jogos"}
+                    </span>
+                  </div>
+
+                  {/* Cards na sequência com diferenciação visual elegante */}
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {matches.map((match) => (
+                      <CompactMatchCard
+                        key={match.id}
+                        match={match}
+                        isFavorite={isFavorite}
+                        onToggleFavorite={toggleFavorite}
+                        onOpenDetails={() => setActiveMatch(match)}
+                        isLiked={isLiked(match.id)}
+                        likeCount={getLikeCount(match.id)}
+                        onToggleLike={() => toggleLike(match.id)}
+                        theme={theme}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
-          /* Empty state */
           <div className="my-10 rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center backdrop-blur">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground mb-3">
               <Search className="h-6 w-6" />
@@ -582,7 +686,7 @@ function JogosDeHoje() {
         )}
       </main>
 
-      {/* FLOATING ACTION BUTTON: WHATSAPP SHARE */}
+      {/* FLOATING ACTION BUTTON */}
       <div className="fixed bottom-5 right-5 z-40">
         <button
           type="button"
@@ -594,7 +698,7 @@ function JogosDeHoje() {
         </button>
       </div>
 
-      {/* MATCH DETAILS MODAL / PAGE */}
+      {/* MATCH DETAILS FULL MODAL */}
       {activeMatch && (
         <MatchDetailsModal
           match={activeMatch}
@@ -700,7 +804,7 @@ function JogosDeHoje() {
 }
 
 // ----------------------------------------------------------------------
-// COMPACT MATCH CARD COMPONENT
+// COMPACT MATCH CARD WITH COLOR DIFFERENTIATION & UNIFORM CHANNELS
 // ----------------------------------------------------------------------
 function CompactMatchCard({
   match,
@@ -710,6 +814,7 @@ function CompactMatchCard({
   isLiked,
   likeCount,
   onToggleLike,
+  theme,
   highlightFavorite = false,
 }: {
   match: MatchItem;
@@ -719,6 +824,7 @@ function CompactMatchCard({
   isLiked: boolean;
   likeCount: number;
   onToggleLike: () => void;
+  theme: TimeSlotTheme;
   highlightFavorite?: boolean;
 }) {
   const homeFav = isFavorite(match.team_home);
@@ -736,21 +842,27 @@ function CompactMatchCard({
       className={`group relative flex flex-col justify-between rounded-xl border p-3 cursor-pointer transition-all active:scale-[0.99] hover:scale-[1.01] ${
         highlightFavorite
           ? "border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-card/90 to-card shadow-[0_0_15px_rgba(245,158,11,0.08)]"
-          : "border-border/80 bg-card/75 backdrop-blur-sm hover:border-primary/50 hover:bg-card/95 hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+          : `${theme.cardBorder} ${theme.cardBgGradient} backdrop-blur-sm ${theme.cardHover} ${theme.cardGlow}`
       }`}
     >
-      {/* Top row: Championship + Time Badge */}
+      {/* Top row: Championship + Time Badge com cor da sequência */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <span className="text-[11px] font-semibold text-muted-foreground truncate max-w-[190px]">
           {match.championship}
         </span>
-        <div className="flex items-center gap-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 text-xs font-black text-emerald-400">
+        <div
+          className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-black ${
+            highlightFavorite
+              ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+              : `${theme.timeBadgeBg} ${theme.timeBadgeBorder} ${theme.timeBadgeText}`
+          }`}
+        >
           <Clock className="h-3 w-3" />
           <span>{match.time_br}</span>
         </div>
       </div>
 
-      {/* Main confrontation: Teams with official logos and larger font */}
+      {/* Main confrontation: Teams with official crests and larger fonts */}
       <div className="space-y-1.5 py-0.5">
         {/* Team Home */}
         <div className="flex items-center justify-between gap-2">
@@ -841,9 +953,9 @@ function CompactMatchCard({
         </div>
       </div>
 
-      {/* COMPACT BOTTOM ROW: Channels logos & Quick Actions (NO wasted vertical space!) */}
+      {/* COMPACT BOTTOM ROW: Channels with identical uniform size & actions */}
       <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-2">
-        {/* Channel Badges with Official Logos inline */}
+        {/* Uniform channel badges (exact same height and font size) */}
         <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
           {match.channels && match.channels.length > 0 ? (
             match.channels.map((ch, idx) => {
@@ -851,9 +963,9 @@ function CompactMatchCard({
               return (
                 <div
                   key={`${ch.name}_${idx}`}
-                  className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-bold ${styles.bg} ${styles.border} ${styles.text}`}
+                  className={`inline-flex items-center justify-center h-6 px-2.5 rounded-md border text-[11px] font-black uppercase tracking-wider ${styles.bg} ${styles.border} ${styles.text}`}
                 >
-                  <ChannelLogo name={ch.name} className="h-3 w-auto" />
+                  <ChannelLogo name={ch.name} className="h-3.5 w-auto" />
                 </div>
               );
             })
@@ -862,7 +974,7 @@ function CompactMatchCard({
           )}
         </div>
 
-        {/* Quick like counter & detail link */}
+        {/* Like counter and details chevron */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
@@ -886,7 +998,7 @@ function CompactMatchCard({
 }
 
 // ----------------------------------------------------------------------
-// MATCH DETAILS FULL MODAL / PAGE (curtir, favoritar, compartilhar)
+// MATCH DETAILS FULL MODAL / PAGE
 // ----------------------------------------------------------------------
 function MatchDetailsModal({
   match,
@@ -916,12 +1028,10 @@ function MatchDetailsModal({
   const homeInitials = getTeamInitialsBadge(match.team_home);
   const awayInitials = getTeamInitialsBadge(match.team_away);
 
-  // Google Calendar Link generator
   const createGoogleCalendarLink = () => {
     try {
       const [year, month, day] = match.date.split("-");
       const [hh, mm] = match.time_br.split(":");
-      // Brasília is UTC-3, so UTC is +3h
       const startHourUtc = (parseInt(hh, 10) + 3) % 24;
       const startHh = String(startHourUtc).padStart(2, "0");
       const startIso = `${year}${month}${day}T${startHh}${mm}00Z`;
@@ -945,7 +1055,6 @@ function MatchDetailsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md animate-in fade-in">
       <div className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-2xl animate-in zoom-in-95 overflow-hidden">
-        {/* Ambient top light */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-36 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.25),_transparent_70%)] pointer-events-none" />
 
         {/* Modal Header */}
@@ -970,7 +1079,7 @@ function MatchDetailsModal({
           </button>
         </div>
 
-        {/* HERO CONFRONTATION: Large Crests & Team Names */}
+        {/* HERO CONFRONTATION: Big Official Crests & Team Names */}
         <div className="relative z-10 my-6 rounded-2xl bg-gradient-to-b from-background/90 to-background/50 border border-border/80 p-5 text-center shadow-inner">
           <div className="flex items-center justify-around gap-2">
             {/* Team Home */}
@@ -980,11 +1089,11 @@ function MatchDetailsModal({
                   <img
                     src={homeLogo}
                     alt={match.team_home}
-                    className="h-14 w-14 sm:h-16 sm:w-16 object-contain drop-shadow-md"
+                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-md"
                   />
                 ) : (
                   <div
-                    className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${homeInitials.gradient} text-lg font-black text-white shadow-lg`}
+                    className={`flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${homeInitials.gradient} text-xl font-black text-white shadow-lg`}
                   >
                     {homeInitials.initials}
                   </div>
@@ -1030,11 +1139,11 @@ function MatchDetailsModal({
                   <img
                     src={awayLogo}
                     alt={match.team_away}
-                    className="h-14 w-14 sm:h-16 sm:w-16 object-contain drop-shadow-md"
+                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-md"
                   />
                 ) : (
                   <div
-                    className={`flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${awayInitials.gradient} text-lg font-black text-white shadow-lg`}
+                    className={`flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${awayInitials.gradient} text-xl font-black text-white shadow-lg`}
                   >
                     {awayInitials.initials}
                   </div>
@@ -1066,7 +1175,7 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* WHERE TO WATCH (ONDE ASSISTIR) SECTION */}
+        {/* WHERE TO WATCH: Uniform channel badges */}
         <div className="relative z-10 mb-5 rounded-2xl border border-border/80 bg-background/50 p-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
             <Tv className="h-3.5 w-3.5 text-primary" /> Onde Assistir ao Vivo
@@ -1091,9 +1200,8 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* PRIMARY ACTIONS: CURTIR, COMPARTILHAR, AGENDAR */}
+        {/* ACTIONS */}
         <div className="relative z-10 grid grid-cols-3 gap-2">
-          {/* Like button */}
           <button
             type="button"
             onClick={onToggleLike}
@@ -1112,7 +1220,6 @@ function MatchDetailsModal({
             <span className="text-[10px] text-muted-foreground">{likeCount} curtidas</span>
           </button>
 
-          {/* WhatsApp Share button */}
           <button
             type="button"
             onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
@@ -1123,7 +1230,6 @@ function MatchDetailsModal({
             <span className="text-[10px] text-emerald-400/80">Compartilhar</span>
           </button>
 
-          {/* Calendar button */}
           <a
             href={createGoogleCalendarLink()}
             target="_blank"
