@@ -53,15 +53,16 @@ export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(as
 /**
  * Silent background endpoint to fetch updated live scores without reloading the page
  */
-export const fetchLiveScoresServerFn = createServerFn({ method: 'POST' })
-  .validator((matches: MatchItem[]) => matches)
-  .handler(async ({ data: matches }) => {
+export const fetchLiveScoresServerFn = createServerFn({ method: 'POST' }).handler(
+  async (ctx: any) => {
     try {
+      const matches: MatchItem[] = ctx?.data || [];
       const scores = await getLiveScoresForMatches(matches);
       return { success: true, scores };
     } catch (err: any) {
       console.warn('[fetchLiveScoresServerFn] Erro:', err);
       return { success: false, scores: {} as Record<string, LiveScoreData> };
     }
-  });
+  }
+);
 

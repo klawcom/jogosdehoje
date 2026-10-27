@@ -41,17 +41,38 @@ export const Route = createFileRoute("/")({
   loader: async () => {
     try {
       const data = await fetchMatchesServerFn();
-      return data;
-    } catch {
-      const local = await scrapeGoalMatches();
-      return {
-        success: local.success,
-        days: local.days,
-        lastUpdated: local.lastUpdated,
-        source: local.source,
-      };
+      if (data && data.success && data.days && data.days.length > 0) {
+        return data;
+      }
+    } catch (e) {
+      console.warn("fetchMatchesServerFn loader warning:", e);
     }
+    const local = await scrapeGoalMatches();
+    return {
+      success: local.success,
+      days: local.days,
+      lastUpdated: local.lastUpdated,
+      source: local.source,
+    };
   },
+  errorComponent: () => (
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-2xl mb-3">
+        ⚽
+      </div>
+      <h2 className="text-lg font-black text-foreground mb-1">Jogos de Hoje</h2>
+      <p className="text-xs text-muted-foreground mb-4 max-w-xs">
+        Atualizando programação de TV e placares...
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow hover:scale-105 transition"
+      >
+        Recarregar página
+      </button>
+    </div>
+  ),
   head: () => ({
     meta: [
       { title: "Jogos de Hoje — Futebol na TV, Horários e Onde Assistir" },
@@ -231,7 +252,12 @@ function JogosDeHoje() {
       try {
         const allMatches = days.flatMap((d) => d.matches);
         if (allMatches.length === 0) return;
-        const res = await fetchLiveScoresServerFn({ data: allMatches });
+        const summary = allMatches.map((m) => ({
+          id: m.id,
+          team_home: m.team_home,
+          team_away: m.team_away,
+        }));
+        const res = await fetchLiveScoresServerFn({ data: summary as any });
         if (res && res.success && res.scores && Object.keys(res.scores).length > 0) {
           setDays((prevDays) =>
             prevDays.map((d) => ({

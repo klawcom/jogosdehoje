@@ -8,6 +8,15 @@ export interface LiveScoreData {
   is_finished: boolean;
 }
 
+function safeTimeoutSignal(ms: number): AbortSignal | undefined {
+  try {
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+      return AbortSignal.timeout(ms);
+    }
+  } catch {}
+  return undefined;
+}
+
 // Major leagues covered automatically and freely by ESPN Scoreboard API (no API key required)
 const ESPN_LEAGUES = [
   'bra.1', // Brasileirão Série A
@@ -111,7 +120,7 @@ async function fetchEspnScores(): Promise<Array<{
       const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard`;
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-        signal: AbortSignal.timeout(6000),
+        signal: safeTimeoutSignal(6000),
       });
 
       if (!res.ok) return;
@@ -193,7 +202,7 @@ async function fetchApiFootballScores(apiKey: string): Promise<Array<{
       headers: {
         'x-apisports-key': apiKey,
       },
-      signal: AbortSignal.timeout(6000),
+      signal: safeTimeoutSignal(6000),
     });
 
     if (!res.ok) return results;
