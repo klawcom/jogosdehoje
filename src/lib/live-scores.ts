@@ -17,23 +17,31 @@ function safeTimeoutSignal(ms: number): AbortSignal | undefined {
   return undefined;
 }
 
-// Major leagues covered automatically and freely by ESPN Scoreboard API (no API key required)
+// Major leagues and cups covered freely by ESPN Scoreboard API (no API key required)
 const ESPN_LEAGUES = [
   'bra.1', // Brasileirão Série A
   'bra.2', // Brasileirão Série B
   'bra.copa_do_brasil', // Copa do Brasil
   'conmebol.libertadores', // Copa Libertadores
   'conmebol.sudamericana', // Copa Sul-Americana
-  'arg.1', // Campeonato Argentino
   'uefa.champions', // UEFA Champions League
   'uefa.europa', // UEFA Europa League
   'uefa.europa.conf', // UEFA Conference League
   'eng.1', // Premier League
+  'eng.league_cup', // Copa da Liga Inglesa (Carabao Cup / EFL Cup)
+  'eng.fa', // Copa da Inglaterra (FA Cup)
   'esp.1', // La Liga
+  'esp.copa_del_rey', // Copa do Rei
   'ita.1', // Serie A Italiana
+  'ita.coppa_italia', // Coppa Italia
   'ger.1', // Bundesliga
+  'ger.dfb_pokal', // Copa da Alemanha (DFB-Pokal)
   'fra.1', // Ligue 1
+  'fra.coupe_de_france', // Copa da França
   'por.1', // Liga Portugal
+  'tur.1', // Campeonato Turco
+  'arg.1', // Campeonato Argentino
+  'afc.champions', // Champions League da Ásia (AFC)
   'fifa.world', // Eliminatórias / Copa do Mundo
   'conmebol.world_cup_qualifying', // Eliminatórias Sul-Americanas
 ];
@@ -93,10 +101,7 @@ interface RawEspnEvent {
   }>;
 }
 
-/**
- * Fetches scoreboards for all major leagues from ESPN
- */
-async function fetchEspnScores(): Promise<Array<{
+export interface ScoreboardEvent {
   homeName: string;
   awayName: string;
   scoreHome: number;
@@ -104,105 +109,105 @@ async function fetchEspnScores(): Promise<Array<{
   statusDesc: string;
   isLive: boolean;
   isFinished: boolean;
-}>> {
-  const results: Array<{
-    homeName: string;
-    awayName: string;
-    scoreHome: number;
-    scoreAway: number;
-    statusDesc: string;
-    isLive: boolean;
-    isFinished: boolean;
-  }> = [];
+  dateStr?: string;
+}
 
-  const promises = ESPN_LEAGUES.map(async league => {
-    try {
-      const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard`;
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-        signal: safeTimeoutSignal(6000),
-      });
+// 30-second in-memory cache to prevent redundant fetches
+let scoreCache: { timestamp: number; events: ScoreboardEvent[] } | null = null;
 
-      if (!res.ok) return;
-      const data = (await res.json()) as { events?: RawEspnEvent[] };
-      if (!data?.events) return;
+/**
+ * Fetches scoreboards for all major leagues from ESPN, using dates parameter (YYYYMMDD)
+ */
+async function fetchEspnScores(dates: string[]): Promise<ScoreboardEvent[]> {
+  const now = Date.now();
+  if (scoreCache && now - scoreCache.timestamp < 30000 && scoreCache.events.length > 0) {
+    return scoreCache.events;
+  }
 
-      for (const ev of data.events) {
-        const comp = ev.competitions?.[0];
-        if (!comp?.competitors) continue;
+  const results: ScoreboardEvent[] = [];
+  const targetDates = dates.length > 0 ? dates : [new Date().toISOString().slice(0, 10).replace(/-/g, '')];
 
-        const home = comp.competitors.find(c => c.homeAway === 'home');
-        const away = comp.competitors.find(c => c.homeAway === 'away');
-        if (!home?.team || !away?.team) continue;
+  const fetchPromises: Promise<void>[] = [];
 
-        const rawHomeScore = parseInt(home.score || '0', 10);
-        const rawAwayScore = parseInt(away.score || '0', 10);
-        const scoreHome = isNaN(rawHomeScore) ? 0 : rawHomeScore;
-        const scoreAway = isNaN(rawAwayScore) ? 0 : rawAwayScore;
+  for (const dateParam of targetDates) {
+    for (const league of ESPN_LEAGUES) {
+      fetchPromises.push(
+        (async () => {
+          try {
+            const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${league}/scoreboard?dates=${dateParam}`;
+            const res = await fetch(url, {
+              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+              signal: safeTimeoutSignal(4500),
+            });
 
-        const state = ev.status?.type?.state;
-        const isFinished = state === 'post' || ev.status?.type?.completed === true;
-        const isLive = state === 'in';
+            if (!res.ok) return;
+            const data = (await res.json()) as { events?: RawEspnEvent[] };
+            if (!data?.events) return;
 
-        // Only register if match is live or finished (or has scored)
-        if (!isLive && !isFinished) continue;
+            for (const ev of data.events) {
+              const comp = ev.competitions?.[0];
+              if (!comp?.competitors) continue;
 
-        let statusDesc = ev.status?.type?.description || '';
-        if (isLive && ev.status?.displayClock) {
-          statusDesc = `Ao vivo • ${ev.status.displayClock}`;
-        } else if (isLive) {
-          statusDesc = 'Ao vivo';
-        } else if (isFinished) {
-          statusDesc = 'Encerrado';
-        }
+              const home = comp.competitors.find(c => c.homeAway === 'home');
+              const away = comp.competitors.find(c => c.homeAway === 'away');
+              if (!home?.team || !away?.team) continue;
 
-        results.push({
-          homeName: home.team.displayName || home.team.name || '',
-          awayName: away.team.displayName || away.team.name || '',
-          scoreHome,
-          scoreAway,
-          statusDesc,
-          isLive,
-          isFinished,
-        });
-      }
-    } catch {
-      // Ignore individual league network errors
+              const rawHomeScore = parseInt(home.score || '0', 10);
+              const rawAwayScore = parseInt(away.score || '0', 10);
+              const scoreHome = isNaN(rawHomeScore) ? 0 : rawHomeScore;
+              const scoreAway = isNaN(rawAwayScore) ? 0 : rawAwayScore;
+
+              const state = ev.status?.type?.state;
+              const isFinished = state === 'post' || ev.status?.type?.completed === true;
+              const isLive = state === 'in';
+
+              let statusDesc = ev.status?.type?.description || '';
+              if (isLive && ev.status?.displayClock) {
+                statusDesc = `Ao vivo • ${ev.status.displayClock}`;
+              } else if (isLive) {
+                statusDesc = 'Ao vivo';
+              } else if (isFinished) {
+                statusDesc = 'Encerrado';
+              }
+
+              results.push({
+                homeName: home.team.displayName || home.team.name || '',
+                awayName: away.team.displayName || away.team.name || '',
+                scoreHome,
+                scoreAway,
+                statusDesc,
+                isLive,
+                isFinished,
+                dateStr: dateParam,
+              });
+            }
+          } catch {
+            // Ignore individual league network errors
+          }
+        })()
+      );
     }
-  });
+  }
 
-  await Promise.allSettled(promises);
+  await Promise.allSettled(fetchPromises);
+  if (results.length > 0) {
+    scoreCache = { timestamp: now, events: results };
+  }
   return results;
 }
 
 /**
  * Optional API-Football (RapidAPI) integration for users who add a free API key
  */
-async function fetchApiFootballScores(apiKey: string): Promise<Array<{
-  homeName: string;
-  awayName: string;
-  scoreHome: number;
-  scoreAway: number;
-  statusDesc: string;
-  isLive: boolean;
-  isFinished: boolean;
-}>> {
-  const results: Array<{
-    homeName: string;
-    awayName: string;
-    scoreHome: number;
-    scoreAway: number;
-    statusDesc: string;
-    isLive: boolean;
-    isFinished: boolean;
-  }> = [];
+async function fetchApiFootballScores(apiKey: string): Promise<ScoreboardEvent[]> {
+  const results: ScoreboardEvent[] = [];
 
   try {
     const res = await fetch('https://v3.football.api-sports.io/fixtures?live=all', {
       headers: {
         'x-apisports-key': apiKey,
       },
-      signal: safeTimeoutSignal(6000),
+      signal: safeTimeoutSignal(5000),
     });
 
     if (!res.ok) return results;
@@ -249,13 +254,22 @@ export async function getLiveScoresForMatches(matches: MatchItem[]): Promise<Rec
   const scoresMap: Record<string, LiveScoreData> = {};
   if (!matches || matches.length === 0) return scoresMap;
 
-  // 1. Fetch from ESPN (free, zero configuration required)
-  const allEvents = await fetchEspnScores();
+  // Extract distinct dates from matches (formatted as YYYYMMDD)
+  const distinctDates = Array.from(
+    new Set(
+      matches
+        .map(m => (m.date || '').replace(/[-/]/g, '').trim())
+        .filter(d => d.length === 8)
+    )
+  );
+
+  // 1. Fetch from ESPN with date parameters
+  const allEvents = await fetchEspnScores(distinctDates);
 
   // 2. Fetch from API-Football if key configured in server environment
   const optionalApiKey =
-    process.env.FOOTBALL_API_KEY ||
-    process.env.API_FOOTBALL_KEY ||
+    (typeof process !== 'undefined' ? process.env?.FOOTBALL_API_KEY : undefined) ||
+    (typeof process !== 'undefined' ? process.env?.API_FOOTBALL_KEY : undefined) ||
     (typeof process !== 'undefined' ? (process as any).env?.VITE_FOOTBALL_API_KEY : undefined);
 
   if (optionalApiKey) {
@@ -265,20 +279,29 @@ export async function getLiveScoresForMatches(matches: MatchItem[]): Promise<Rec
 
   // 3. Match each MatchItem against scoreboard events
   for (const match of matches) {
+    const matchDateParam = (match.date || '').replace(/[-/]/g, '').trim();
+
     const eventMatch = allEvents.find(ev => {
+      // If event has dateStr and match has date, prioritize same date
+      if (ev.dateStr && matchDateParam && ev.dateStr !== matchDateParam) {
+        return false;
+      }
       const homeMatches = areTeamsMatching(match.team_home, ev.homeName);
       const awayMatches = areTeamsMatching(match.team_away, ev.awayName);
       return homeMatches && awayMatches;
     });
 
     if (eventMatch) {
-      scoresMap[match.id] = {
-        score_home: eventMatch.scoreHome,
-        score_away: eventMatch.scoreAway,
-        status_desc: eventMatch.statusDesc,
-        is_live: eventMatch.isLive,
-        is_finished: eventMatch.isFinished,
-      };
+      // Only set scores if the match is live, finished, or has a non-zero score recorded
+      if (eventMatch.isLive || eventMatch.isFinished || eventMatch.scoreHome > 0 || eventMatch.scoreAway > 0) {
+        scoresMap[match.id] = {
+          score_home: eventMatch.scoreHome,
+          score_away: eventMatch.scoreAway,
+          status_desc: eventMatch.statusDesc,
+          is_live: eventMatch.isLive,
+          is_finished: eventMatch.isFinished,
+        };
+      }
     }
   }
 

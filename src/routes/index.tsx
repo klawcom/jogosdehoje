@@ -251,17 +251,21 @@ function JogosDeHoje() {
 
   // Silent background auto-update for live scores and status without page reload
   useEffect(() => {
-    const timer = setInterval(async () => {
+    let isCancelled = false;
+
+    const updateLiveScores = async () => {
       if (typeof document !== "undefined" && document.hidden) return;
       try {
         const allMatches = days.flatMap((d) => d.matches);
         if (allMatches.length === 0) return;
         const summary = allMatches.map((m) => ({
           id: m.id,
+          date: m.date,
           team_home: m.team_home,
           team_away: m.team_away,
         }));
         const res = await fetchLiveScoresServerFn({ data: summary as any });
+        if (isCancelled) return;
         if (res && res.success && res.scores && Object.keys(res.scores).length > 0) {
           setDays((prevDays) =>
             prevDays.map((d) => ({
@@ -273,10 +277,17 @@ function JogosDeHoje() {
       } catch {
         // Silent failure in background
       }
-    }, 45000);
+    };
 
-    return () => clearInterval(timer);
-  }, [days]);
+    // Run immediately on mount/load
+    updateLiveScores();
+
+    const timer = setInterval(updateLiveScores, 30000);
+    return () => {
+      isCancelled = true;
+      clearInterval(timer);
+    };
+  }, [days.length]);
 
   const currentDay: DaySchedule | undefined = days[selectedDayIndex] || days[0];
 
@@ -993,8 +1004,8 @@ function CompactMatchCard({
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {(status.isLive || status.isFinished) && match.score_home != null && (
-              <span className="flex h-6 min-w-[22px] px-1.5 items-center justify-center rounded-md bg-muted/80 text-foreground font-black text-xs sm:text-sm border border-border/70">
+            {match.score_home != null && (
+              <span className="flex h-6 min-w-[24px] px-2 items-center justify-center rounded-md bg-muted/90 text-foreground font-black text-xs sm:text-sm border border-border/80 shadow-sm">
                 {match.score_home}
               </span>
             )}
@@ -1031,8 +1042,8 @@ function CompactMatchCard({
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            {(status.isLive || status.isFinished) && match.score_away != null && (
-              <span className="flex h-6 min-w-[22px] px-1.5 items-center justify-center rounded-md bg-muted/80 text-foreground font-black text-xs sm:text-sm border border-border/70">
+            {match.score_away != null && (
+              <span className="flex h-6 min-w-[24px] px-2 items-center justify-center rounded-md bg-muted/90 text-foreground font-black text-xs sm:text-sm border border-border/80 shadow-sm">
                 {match.score_away}
               </span>
             )}
@@ -1209,16 +1220,23 @@ function MatchDetailsModal({
                 <span>{status.label}</span>
               </div>
 
-              {/* Placar (ex.: 2 x 1) no lugar do VS para jogos ao vivo e encerrados */}
-              {(status.isLive || status.isFinished) && match.score_home != null && match.score_away != null ? (
+              {/* Placar (ex.: 2 x 1) no lugar do VS para jogos ao vivo e encerrados com resultado */}
+              {match.score_home != null && match.score_away != null ? (
                 <div className="my-2 flex flex-col items-center">
-                  <div className="px-4 py-1.5 rounded-2xl bg-card border border-border shadow-md">
-                    <span className="text-2xl sm:text-3xl font-black text-foreground tracking-widest">
+                  <div className="px-5 py-2 rounded-2xl bg-card border-2 border-primary/40 shadow-lg">
+                    <span className="text-3xl sm:text-4xl font-black text-foreground tracking-widest">
                       {match.score_home} x {match.score_away}
                     </span>
                   </div>
-                  <span className="text-[11px] text-muted-foreground font-semibold mt-1">
-                    Início: {match.time_br} (Brasília)
+                  <span className="text-[11px] text-muted-foreground font-semibold mt-1.5 flex items-center gap-1">
+                    {status.isLive && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                      </span>
+                    )}
+                    <span>{status.isLive ? "Placar ao vivo" : status.isFinished ? "Placar final" : "Resultado"}</span>
+                    <span>• Início: {match.time_br} (Brasília)</span>
                   </span>
                 </div>
               ) : (
