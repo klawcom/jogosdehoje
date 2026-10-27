@@ -1307,63 +1307,58 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* SEÇÃO DE AÇÕES RÁPIDAS: WhatsApp, Salvar na Agenda & Curtir */}
-        <div className="relative z-10 space-y-3">
-          {/* Main Action Buttons Grid: WhatsApp & Salvar na Agenda */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Botão Compartilhar no WhatsApp */}
+        {/* LINHA INFERIOR: AÇÕES ALINHADAS (Curtir, Google Calendar, WhatsApp) */}
+        <div className="relative z-10 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+          {/* Lado esquerdo: Três ícones alinhados (Coração com contador, Agenda Google e WhatsApp) */}
+          <div className="flex items-center gap-2">
+            {/* 1. Curtir: apenas ícone de coração com contador de curtidas */}
             <button
               type="button"
-              onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
-              className="group relative flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-3.5 font-bold shadow-lg shadow-emerald-950/20 active:scale-[0.98] transition-all overflow-hidden border border-emerald-400/30 cursor-pointer"
+              onClick={onToggleLike}
+              title={isLiked ? "Descurtir jogo" : "Curtir jogo"}
+              className={`inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
+                isLiked
+                  ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm"
+                  : "bg-muted/40 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+              aria-label={isLiked ? "Descurtir jogo" : "Curtir jogo"}
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
-                <WhatsAppIcon className="h-5 w-5 fill-white" />
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-sm font-extrabold leading-tight">Compartilhar no WhatsApp</span>
-                <span className="text-[11px] text-emerald-100 font-medium leading-tight">Horário e canais para amigos</span>
-              </div>
+              <Heart className={`h-4 w-4 ${isLiked ? "fill-rose-500 text-rose-500 scale-105" : ""}`} />
+              <span className="font-extrabold">{likeCount}</span>
             </button>
 
-            {/* Botão Lembrete na Agenda Google */}
+            {/* 2. Lembrete na agenda (Google Calendar): apenas ícone com legenda */}
             <a
               href={calendarUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 font-bold shadow-lg shadow-indigo-950/20 active:scale-[0.98] transition-all overflow-hidden border border-blue-400/30 cursor-pointer"
-              title="Agendar lembrete no Google Agenda"
+              title="Lembrete na agenda (Google Calendar)"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
+              aria-label="Lembrete na agenda (Google Calendar)"
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
-                <CalendarPlus className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex flex-col text-left min-w-0">
-                <span className="text-sm font-extrabold leading-tight truncate">Lembrete na Agenda</span>
-                <span className="text-[11px] text-blue-100 font-medium leading-tight truncate">Salvar no Google Agenda</span>
-              </div>
+              <CalendarPlus className="h-4 w-4" />
             </a>
-          </div>
 
-          {/* Linha de Apoio: Curtir com contador real */}
-          <div className="flex items-center justify-start px-1 pt-0.5">
+            {/* 3. WhatsApp: apenas ícone com legenda */}
             <button
               type="button"
-              onClick={onToggleLike}
-              className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold transition border cursor-pointer ${
-                isLiked
-                  ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm"
-                  : "bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
+              title="Compartilhar no WhatsApp"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
+              aria-label="Compartilhar no WhatsApp"
             >
-              <Heart className={`h-4 w-4 ${isLiked ? "fill-rose-500 text-rose-500 scale-105" : ""}`} />
-              <span>{isLiked ? "Você curtiu" : "Curtir jogo"}</span>
-              <span className="ml-0.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[10px] text-foreground font-bold">
-                {likeCount}
-              </span>
+              <WhatsAppIcon className="h-4 w-4 fill-current" />
             </button>
           </div>
+
+          {/* Lado direito: Botão Fechar compacto para celular e desktop */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-10 px-4 rounded-xl border border-border/70 bg-muted/30 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer active:scale-95"
+          >
+            Fechar
+          </button>
         </div>
       </div>
     </div>
