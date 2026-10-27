@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
@@ -30,7 +31,7 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#0f1520" },
-      { title: "Jogos de Hoje — Onde Assistir Futebol na TV e Streaming" },
+      { title: "Jogos de Hoje — Futebol na TV e Streaming" },
       { name: "description", content: "Confira todos os jogos de futebol de hoje com horários de Brasília e onde assistir na TV aberta, TV fechada e streaming." },
       { property: "og:title", content: "Jogos de Hoje — Futebol na TV e Streaming" },
       { property: "og:description", content: "Programação completa dos jogos de hoje no horário de Brasília com canais de transmissão." },
@@ -79,5 +80,30 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Hide the "Edit with Lovable" badge if injected dynamically
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hideLovable = () => {
+      // Find elements with lovable text or links
+      const allElements = document.querySelectorAll("a, button, div, span");
+      allElements.forEach((el) => {
+        const text = el.textContent || "";
+        const href = el.getAttribute("href") || "";
+        if (text.includes("Edit with Lovable") || href.includes("lovable.dev") || href.includes("lovable.app/projects")) {
+          const container = el.closest('div[style*="position: fixed"]') || el;
+          (container as HTMLElement).style.setProperty("display", "none", "important");
+          (container as HTMLElement).style.setProperty("visibility", "hidden", "important");
+        }
+      });
+    };
+
+    hideLovable();
+    const observer = new MutationObserver(hideLovable);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   return <Outlet />;
 }

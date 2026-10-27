@@ -35,7 +35,7 @@
 
 :root {
   --radius: 0.875rem;
-  /* Dark Mode Default - Futebol na TV */
+  /* Dark Mode Default - Jogos de Hoje */
   --background: oklch(0.11 0.012 250);
   --foreground: oklch(0.98 0.005 250);
   --card: oklch(0.16 0.015 250);
@@ -93,4 +93,26 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.38 0.02 250);
+}
+
+/* Ocultar selo "Edit with Lovable" */
+#lovable-badge,
+[data-lovable-badge],
+.lovable-badge,
+[class*="lovable-badge"],
+[id*="lovable-badge"],
+div[data-component-tagger],
+a[href*="lovable.dev"],
+a[href*="lovable.app/projects"],
+div:has(> a[href*="lovable.dev"]),
+div:has(> a[href*="lovable.app"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
 }

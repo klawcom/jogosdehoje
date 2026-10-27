@@ -15,12 +15,14 @@ import {
   Calendar,
   ChevronRight as ChevronRightIcon,
   Tv,
+  Radio,
 } from "lucide-react";
 import { fetchMatchesServerFn } from "../lib/server-fn";
 import { DaySchedule, MatchItem, ChannelType } from "../lib/types";
 import { getChannelBadgeStyles } from "../lib/channel-helper";
 import { ChannelLogo } from "../lib/channel-logos";
 import { getTeamLogo, getTeamInitialsBadge } from "../lib/team-logos";
+import { getMatchStatus } from "../lib/match-status";
 import { shareMatchesOnWhatsApp, shareSingleMatchOnWhatsApp } from "../lib/whatsapp";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
@@ -80,7 +82,7 @@ const POPULAR_TEAMS = [
   "Union Santa Fe",
 ];
 
-// Color sequence themes for time slot differentiation
+// Temas de cores que diferenciam as sequências de horários seguindo a paleta do site
 interface TimeSlotTheme {
   name: string;
   badgeBg: string;
@@ -99,7 +101,7 @@ interface TimeSlotTheme {
 
 function getTimeSlotTheme(slotIndex: number): TimeSlotTheme {
   const themes: TimeSlotTheme[] = [
-    // 1. Esmeralda / Verde (Padrão Principal do Site)
+    // 1. Esmeralda / Verde (Padrão Principal)
     {
       name: "emerald",
       badgeBg: "bg-emerald-500/15",
@@ -329,7 +331,6 @@ function JogosDeHoje() {
       {/* HEADER: Jogos de Hoje */}
       <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/90 border-b border-border/80 px-4 py-3 sm:px-6">
         <div className="mx-auto max-w-3xl flex items-center justify-between">
-          {/* Logo & App Title: Jogos de Hoje */}
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40">
               <span className="text-xl">⚽</span>
@@ -468,7 +469,7 @@ function JogosDeHoje() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por time (ex: Flamengo, Real Madrid, Palmeiras...)"
+              placeholder="Buscar por time (ex: Flamengo, Grêmio, Real Madrid, Palmeiras...)"
               className="w-full rounded-xl border border-border bg-card/70 pl-10 pr-9 py-2.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 backdrop-blur transition"
             />
             {searchQuery && (
@@ -609,9 +610,6 @@ function JogosDeHoje() {
                   isFavorite={isFavorite}
                   onToggleFavorite={toggleFavorite}
                   onOpenDetails={() => setActiveMatch(match)}
-                  isLiked={isLiked(match.id)}
-                  likeCount={getLikeCount(match.id)}
-                  onToggleLike={() => toggleLike(match.id)}
                   theme={getTimeSlotTheme(3)} // Gold/Amber theme for favorites
                   highlightFavorite
                 />
@@ -628,7 +626,7 @@ function JogosDeHoje() {
 
               return (
                 <section key={time} className="space-y-2">
-                  {/* Time slot header diferenciado por cor seguindo o padrão */}
+                  {/* Time slot header */}
                   <div className="flex items-center justify-between border-b border-border/80 pb-1.5 px-1">
                     <div className="flex items-center gap-2">
                       <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${theme.iconBg} ${theme.iconText} shadow-sm ring-1 ring-white/10`}>
@@ -653,9 +651,6 @@ function JogosDeHoje() {
                         isFavorite={isFavorite}
                         onToggleFavorite={toggleFavorite}
                         onOpenDetails={() => setActiveMatch(match)}
-                        isLiked={isLiked(match.id)}
-                        likeCount={getLikeCount(match.id)}
-                        onToggleLike={() => toggleLike(match.id)}
                         theme={theme}
                       />
                     ))}
@@ -738,24 +733,19 @@ function JogosDeHoje() {
               <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto p-1">
                 {POPULAR_TEAMS.map((team) => {
                   const active = isFavorite(team);
-                  const logo = getTeamLogo(team);
                   return (
                     <button
                       key={team}
                       type="button"
                       onClick={() => toggleFavorite(team)}
-                      className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                      className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
                         active
                           ? "bg-amber-400 text-amber-950 shadow-md ring-2 ring-amber-300"
                           : "bg-background/80 text-foreground border border-border hover:border-primary/50"
                       }`}
                     >
-                      {logo ? (
-                        <img src={logo} alt={team} className="h-4 w-4 object-contain" />
-                      ) : (
-                        <Star className={`h-3 w-3 ${active ? "fill-amber-950" : "text-muted-foreground"}`} />
-                      )}
-                      {team}
+                      <TeamBadge teamName={team} size="sm" />
+                      <span>{team}</span>
                     </button>
                   );
                 })}
@@ -804,16 +794,55 @@ function JogosDeHoje() {
 }
 
 // ----------------------------------------------------------------------
-// COMPACT MATCH CARD WITH COLOR DIFFERENTIATION & UNIFORM CHANNELS
+// TEAM BADGE (Imagem Local ou Círculo com Iniciais Perfeitas)
+// ----------------------------------------------------------------------
+function TeamBadge({
+  teamName,
+  size = "md",
+}: {
+  teamName: string;
+  size?: "sm" | "md" | "lg";
+}) {
+  const [imgError, setImgError] = useState(false);
+  const logo = getTeamLogo(teamName);
+  const initialsInfo = getTeamInitialsBadge(teamName);
+
+  const sizeClasses = {
+    sm: "h-5 w-5 text-[9px]",
+    md: "h-7 w-7 text-[11px]",
+    lg: "h-16 w-16 sm:h-20 sm:w-20 text-xl",
+  }[size];
+
+  if (logo && !imgError) {
+    return (
+      <img
+        src={logo}
+        alt={teamName}
+        onError={() => setImgError(true)}
+        className={`${sizeClasses} shrink-0 object-contain drop-shadow-sm`}
+        loading="lazy"
+      />
+    );
+  }
+
+  // Círculo bonito com as iniciais quando faltar imagem
+  return (
+    <div
+      className={`flex ${sizeClasses} shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${initialsInfo.gradient} font-black text-white shadow-md ring-1 ring-white/20 select-none`}
+    >
+      {initialsInfo.initials}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------
+// COMPACT MATCH CARD
 // ----------------------------------------------------------------------
 function CompactMatchCard({
   match,
   isFavorite,
   onToggleFavorite,
   onOpenDetails,
-  isLiked,
-  likeCount,
-  onToggleLike,
   theme,
   highlightFavorite = false,
 }: {
@@ -821,20 +850,12 @@ function CompactMatchCard({
   isFavorite: (team: string) => boolean;
   onToggleFavorite: (team: string) => void;
   onOpenDetails: () => void;
-  isLiked: boolean;
-  likeCount: number;
-  onToggleLike: () => void;
   theme: TimeSlotTheme;
   highlightFavorite?: boolean;
 }) {
   const homeFav = isFavorite(match.team_home);
   const awayFav = isFavorite(match.team_away);
-
-  const homeLogo = getTeamLogo(match.team_home);
-  const awayLogo = getTeamLogo(match.team_away);
-
-  const homeInitials = getTeamInitialsBadge(match.team_home);
-  const awayInitials = getTeamInitialsBadge(match.team_away);
+  const status = getMatchStatus(match);
 
   return (
     <div
@@ -842,51 +863,45 @@ function CompactMatchCard({
       className={`group relative flex flex-col justify-between rounded-xl border p-3 cursor-pointer transition-all active:scale-[0.99] hover:scale-[1.01] ${
         highlightFavorite
           ? "border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-card/90 to-card shadow-[0_0_15px_rgba(245,158,11,0.08)]"
+          : status.isFinished
+          ? "border-border/40 bg-card/45 opacity-70 hover:opacity-100 transition-opacity"
           : `${theme.cardBorder} ${theme.cardBgGradient} backdrop-blur-sm ${theme.cardHover} ${theme.cardGlow}`
       }`}
     >
-      {/* Top row: Championship + Time Badge com cor da sequência */}
+      {/* Top row: Championship + Status do Jogo (Ao vivo / Em breve / Encerrado) */}
       <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="text-[11px] font-semibold text-muted-foreground truncate max-w-[190px]">
+        <span className="text-[11px] font-semibold text-muted-foreground truncate max-w-[170px]">
           {match.championship}
         </span>
+
+        {/* Status Badge Dinâmico */}
         <div
-          className={`flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-black ${
-            highlightFavorite
-              ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
-              : `${theme.timeBadgeBg} ${theme.timeBadgeBorder} ${theme.timeBadgeText}`
-          }`}
+          className={`flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-black ${status.badgeStyle.bg} ${status.badgeStyle.border} ${status.badgeStyle.text}`}
         >
-          <Clock className="h-3 w-3" />
-          <span>{match.time_br}</span>
+          {status.isLive && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+          )}
+          {status.isUpcoming && <Clock className="h-3 w-3" />}
+          <span>{status.label}</span>
         </div>
       </div>
 
-      {/* Main confrontation: Teams with official crests and larger fonts */}
+      {/* Main confrontation: Teams with official crests / circular initials and larger fonts */}
       <div className="space-y-1.5 py-0.5">
         {/* Team Home */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            {homeLogo ? (
-              <img
-                src={homeLogo}
-                alt={match.team_home}
-                className="h-6 w-6 shrink-0 object-contain drop-shadow-sm"
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${homeInitials.gradient} text-[10px] font-black text-white shadow-sm`}
-              >
-                {homeInitials.initials}
-              </div>
-            )}
+            <TeamBadge teamName={match.team_home} size="md" />
             <span
               className={`text-[15px] sm:text-base font-bold tracking-tight truncate ${
-                homeFav ? "text-amber-300 font-extrabold" : "text-white"
+                homeFav
+                  ? "text-amber-300 font-extrabold"
+                  : status.isFinished
+                  ? "text-muted-foreground"
+                  : "text-white"
               }`}
             >
               {match.team_home}
@@ -910,26 +925,14 @@ function CompactMatchCard({
         {/* Team Away */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            {awayLogo ? (
-              <img
-                src={awayLogo}
-                alt={match.team_away}
-                className="h-6 w-6 shrink-0 object-contain drop-shadow-sm"
-                loading="lazy"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${awayInitials.gradient} text-[10px] font-black text-white shadow-sm`}
-              >
-                {awayInitials.initials}
-              </div>
-            )}
+            <TeamBadge teamName={match.team_away} size="md" />
             <span
               className={`text-[15px] sm:text-base font-bold tracking-tight truncate ${
-                awayFav ? "text-amber-300 font-extrabold" : "text-white"
+                awayFav
+                  ? "text-amber-300 font-extrabold"
+                  : status.isFinished
+                  ? "text-muted-foreground"
+                  : "text-white"
               }`}
             >
               {match.team_away || "A definir"}
@@ -953,7 +956,7 @@ function CompactMatchCard({
         </div>
       </div>
 
-      {/* COMPACT BOTTOM ROW: Channels with identical uniform size & actions */}
+      {/* COMPACT BOTTOM ROW: Channels in uniform size & chevron (NO random number!) */}
       <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-2">
         {/* Uniform channel badges (exact same height and font size) */}
         <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
@@ -974,23 +977,10 @@ function CompactMatchCard({
           )}
         </div>
 
-        {/* Like counter and details chevron */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleLike();
-            }}
-            className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-rose-400 transition p-1"
-            title="Curtir jogo"
-          >
-            <Heart
-              className={`h-3.5 w-3.5 ${isLiked ? "fill-rose-500 text-rose-500 animate-pulse" : ""}`}
-            />
-            <span>{likeCount}</span>
-          </button>
-          <ChevronRightIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
+        {/* Clean details chevron indicator */}
+        <div className="flex items-center gap-1 shrink-0 text-muted-foreground group-hover:text-primary transition-colors">
+          <span className="text-[10px] font-bold hidden sm:inline">Detalhes</span>
+          <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
     </div>
@@ -1021,12 +1011,7 @@ function MatchDetailsModal({
 }) {
   const homeFav = isFavorite(match.team_home);
   const awayFav = isFavorite(match.team_away);
-
-  const homeLogo = getTeamLogo(match.team_home);
-  const awayLogo = getTeamLogo(match.team_away);
-
-  const homeInitials = getTeamInitialsBadge(match.team_home);
-  const awayInitials = getTeamInitialsBadge(match.team_away);
+  const status = getMatchStatus(match);
 
   const createGoogleCalendarLink = () => {
     try {
@@ -1042,7 +1027,7 @@ function MatchDetailsModal({
 
       const title = `${match.match_title} (${match.championship})`;
       const channelsText = match.channels.map((c) => c.name).join(", ");
-      const details = `Jogo de Futebol: ${match.match_title}\nCampeonato: ${match.championship}\nOnde Assistir: ${channelsText}\nHorário de Brasília: ${match.time_br}\n\nAcesse: https://jogosdehoje.lovable.app`;
+      const details = `Jogo: ${match.match_title}\nCampeonato: ${match.championship}\nOnde Assistir: ${channelsText}\nHorário de Brasília: ${match.time_br}\n\nAcesse: https://jogosdehoje.lovable.app`;
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
         title
@@ -1079,25 +1064,13 @@ function MatchDetailsModal({
           </button>
         </div>
 
-        {/* HERO CONFRONTATION: Big Official Crests & Team Names */}
+        {/* HERO CONFRONTATION: Big Escudos & Team Names */}
         <div className="relative z-10 my-6 rounded-2xl bg-gradient-to-b from-background/90 to-background/50 border border-border/80 p-5 text-center shadow-inner">
           <div className="flex items-center justify-around gap-2">
             {/* Team Home */}
             <div className="flex-1 flex flex-col items-center">
               <div className="relative mb-2">
-                {homeLogo ? (
-                  <img
-                    src={homeLogo}
-                    alt={match.team_home}
-                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-md"
-                  />
-                ) : (
-                  <div
-                    className={`flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${homeInitials.gradient} text-xl font-black text-white shadow-lg`}
-                  >
-                    {homeInitials.initials}
-                  </div>
-                )}
+                <TeamBadge teamName={match.team_home} size="lg" />
                 {homeFav && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 shadow">
                     <Star className="h-3 w-3 fill-amber-950 text-amber-950" />
@@ -1121,33 +1094,32 @@ function MatchDetailsModal({
               </button>
             </div>
 
-            {/* VS & Time */}
+            {/* Status & Horário */}
             <div className="flex flex-col items-center justify-center px-2">
-              <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-sm font-black text-emerald-400">
+              <div
+                className={`rounded-full border px-3 py-1 text-xs font-black flex items-center gap-1.5 ${status.badgeStyle.bg} ${status.badgeStyle.border} ${status.badgeStyle.text}`}
+              >
+                {status.isLive && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                  </span>
+                )}
+                <span>{status.label}</span>
+              </div>
+              <span className="text-sm font-extrabold text-white mt-1">
                 {match.time_br}
               </span>
-              <span className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-wider">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
                 Brasília
               </span>
-              <span className="text-xs font-black text-muted-foreground/60 my-1">VS</span>
+              <span className="text-xs font-black text-muted-foreground/50 my-1">VS</span>
             </div>
 
             {/* Team Away */}
             <div className="flex-1 flex flex-col items-center">
               <div className="relative mb-2">
-                {awayLogo ? (
-                  <img
-                    src={awayLogo}
-                    alt={match.team_away}
-                    className="h-16 w-16 sm:h-20 sm:w-20 object-contain drop-shadow-md"
-                  />
-                ) : (
-                  <div
-                    className={`flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${awayInitials.gradient} text-xl font-black text-white shadow-lg`}
-                  >
-                    {awayInitials.initials}
-                  </div>
-                )}
+                <TeamBadge teamName={match.team_away} size="lg" />
                 {awayFav && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 shadow">
                     <Star className="h-3 w-3 fill-amber-950 text-amber-950" />
@@ -1175,7 +1147,7 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* WHERE TO WATCH: Uniform channel badges */}
+        {/* WHERE TO WATCH */}
         <div className="relative z-10 mb-5 rounded-2xl border border-border/80 bg-background/50 p-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
             <Tv className="h-3.5 w-3.5 text-primary" /> Onde Assistir ao Vivo
@@ -1200,7 +1172,7 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* ACTIONS */}
+        {/* ACTIONS: Curtir, WhatsApp, Agenda */}
         <div className="relative z-10 grid grid-cols-3 gap-2">
           <button
             type="button"
