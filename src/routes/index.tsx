@@ -13,6 +13,8 @@ import {
   Trophy,
   Heart,
   Calendar,
+  CalendarPlus,
+  Download,
   ChevronRight as ChevronRightIcon,
   Tv,
   Radio,
@@ -30,6 +32,8 @@ import {
   shareSingleMatchOnWhatsApp,
   shareFloatingButton,
 } from "../lib/whatsapp";
+import { getGoogleCalendarUrl, downloadCalendarIcs } from "../lib/calendar";
+import { WhatsAppIcon } from "../components/icons/whatsapp-icon";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
@@ -465,10 +469,10 @@ function JogosDeHoje() {
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition cursor-pointer"
               title="Compartilhar programação completa no WhatsApp"
             >
-              <Share2 className="h-3.5 w-3.5" />
+              <WhatsAppIcon className="h-4 w-4 fill-white" />
               <span className="font-bold">WhatsApp</span>
             </button>
           </div>
@@ -766,9 +770,10 @@ function JogosDeHoje() {
         <button
           type="button"
           onClick={handleShareWhatsApp}
-          className="group flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all"
+          className="group flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          title="Compartilhar jogos no WhatsApp"
         >
-          <Share2 className="h-4 w-4" />
+          <WhatsAppIcon className="h-4 w-4 fill-white" />
           <span className="font-bold">Compartilhar</span>
         </button>
       </div>
@@ -1050,7 +1055,7 @@ function CompactMatchCard({
         </div>
       </div>
 
-      {/* COMPACT BOTTOM ROW: Channels in uniform size & chevron (NO random number!) */}
+      {/* COMPACT BOTTOM ROW: Channels in uniform size, quick share & details chevron */}
       <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center justify-between gap-2">
         {/* Uniform channel badges (exact same height and font size) */}
         <div className="flex flex-wrap items-center gap-1.5 min-w-0 flex-1">
@@ -1071,10 +1076,35 @@ function CompactMatchCard({
           )}
         </div>
 
-        {/* Clean details chevron indicator */}
-        <div className="flex items-center gap-1 shrink-0 text-muted-foreground group-hover:text-primary transition-colors">
-          <span className="text-[10px] font-bold hidden sm:inline">Detalhes</span>
-          <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        {/* Quick action buttons on card: WhatsApp, Calendar & Details indicator */}
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              shareSingleMatchOnWhatsApp(match);
+            }}
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 hover:scale-105 active:scale-95 transition cursor-pointer"
+            title="Compartilhar no WhatsApp"
+          >
+            <WhatsAppIcon className="h-3.5 w-3.5 fill-current" />
+          </button>
+
+          <a
+            href={getGoogleCalendarUrl(match)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/25 hover:scale-105 active:scale-95 transition cursor-pointer"
+            title="Salvar lembrete na agenda (Google Calendar)"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" />
+          </a>
+
+          <div className="flex items-center gap-0.5 text-muted-foreground group-hover:text-primary transition-colors pl-1">
+            <span className="text-[10px] font-bold hidden sm:inline">Detalhes</span>
+            <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </div>
         </div>
       </div>
     </div>
@@ -1106,30 +1136,7 @@ function MatchDetailsModal({
   const homeFav = isFavorite(match.team_home);
   const awayFav = isFavorite(match.team_away);
   const status = getMatchStatus(match);
-
-  const createGoogleCalendarLink = () => {
-    try {
-      const [year, month, day] = (match.date || "").split("-").map(Number);
-      const [hh, mm] = (match.time_br || "16:00").split(":").map(Number);
-      // Brasília time is UTC-3, so UTC hour is hh + 3
-      const startUtc = new Date(Date.UTC(year, month - 1, day, hh + 3, mm, 0));
-      const endUtc = new Date(startUtc.getTime() + 2 * 60 * 60 * 1000); // Duration: 2h
-      const formatUtc = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-
-      const startIso = formatUtc(startUtc);
-      const endIso = formatUtc(endUtc);
-
-      const title = `${match.match_title} (${match.championship})`;
-      const channelsText = match.channels.map((c) => c.name).join(", ") || "A definir";
-      const details = `⚽ Jogo: ${match.match_title}\n🏆 Campeonato: ${match.championship}\n⏰ Horário de Brasília: ${match.time_br} (Duração: 2h)\n📺 Onde Assistir: ${channelsText}\n\n📲 Acompanhe todos os jogos no Jogos de Hoje:\nhttps://jogosdehoje.lovable.app`;
-
-      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-        title
-      )}&dates=${startIso}/${endIso}&details=${encodeURIComponent(details)}`;
-    } catch {
-      return "#";
-    }
-  };
+  const calendarUrl = getGoogleCalendarUrl(match, displayDate);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md animate-in fade-in">
@@ -1283,48 +1290,81 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* ACTIONS: Curtir, WhatsApp, Salvar na agenda (Google Calendar) */}
-        <div className="relative z-10 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={onToggleLike}
-            className={`flex flex-col items-center justify-center rounded-2xl border p-3 font-bold transition-all ${
-              isLiked
-                ? "bg-rose-500/20 border-rose-500/50 text-rose-600 dark:text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)] scale-[1.02]"
-                : "bg-card border-border text-foreground hover:bg-card/80 hover:border-rose-500/40"
-            }`}
-          >
-            <Heart
-              className={`h-5 w-5 mb-1 ${
-                isLiked ? "fill-rose-500 text-rose-500 scale-110" : "text-muted-foreground"
+        {/* SEÇÃO DE AÇÕES RÁPIDAS: WhatsApp, Salvar na Agenda & Curtir */}
+        <div className="relative z-10 space-y-3">
+          {/* Main Action Buttons Grid: WhatsApp & Salvar na Agenda */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Botão Compartilhar no WhatsApp */}
+            <button
+              type="button"
+              onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
+              className="group relative flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-3.5 font-bold shadow-lg shadow-emerald-950/20 active:scale-[0.98] transition-all overflow-hidden border border-emerald-400/30 cursor-pointer"
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
+                <WhatsAppIcon className="h-5 w-5 fill-white" />
+              </div>
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-extrabold leading-tight">Compartilhar no WhatsApp</span>
+                <span className="text-[11px] text-emerald-100 font-medium leading-tight">Horário e canais para amigos</span>
+              </div>
+            </button>
+
+            {/* Botão Salvar na Agenda */}
+            <div className="flex items-stretch gap-1.5">
+              <a
+                href={calendarUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex-1 relative flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 font-bold shadow-lg shadow-indigo-950/20 active:scale-[0.98] transition-all overflow-hidden border border-blue-400/30 cursor-pointer"
+                title="Salvar no Google Calendar (2h)"
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
+                  <CalendarPlus className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-sm font-extrabold leading-tight truncate">Salvar na Agenda</span>
+                  <span className="text-[11px] text-blue-100 font-medium leading-tight truncate">Google Calendar (2h)</span>
+                </div>
+              </a>
+
+              {/* Botão Download .ICS para Apple / iPhone / Outlook com alarme de 15min */}
+              <button
+                type="button"
+                onClick={() => downloadCalendarIcs(match, displayDate)}
+                className="flex flex-col items-center justify-center px-3.5 rounded-2xl border border-border/80 bg-background/60 hover:bg-muted text-muted-foreground hover:text-foreground active:scale-95 transition cursor-pointer"
+                title="Baixar lembrete (.ics) com alarme de 15 minutos antes para iPhone, Apple Agenda ou Outlook"
+              >
+                <Download className="h-4 w-4" />
+                <span className="text-[9px] font-black uppercase tracking-tight mt-0.5">.ICS</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Linha de Apoio: Curtir com contador + aviso de lembrete */}
+          <div className="flex items-center justify-between px-1 pt-0.5">
+            <button
+              type="button"
+              onClick={onToggleLike}
+              className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-bold transition border cursor-pointer ${
+                isLiked
+                  ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm"
+                  : "bg-muted/40 border-border/60 text-muted-foreground hover:text-foreground"
               }`}
-            />
-            <span className="text-xs font-black">{isLiked ? "Curtido!" : "Curtir"}</span>
-            <span className="text-[10px] text-muted-foreground">{likeCount} curtidas</span>
-          </button>
+            >
+              <Heart className={`h-4 w-4 ${isLiked ? "fill-rose-500 text-rose-500 scale-105" : ""}`} />
+              <span>{isLiked ? "Você curtiu" : "Curtir jogo"}</span>
+              <span className="ml-0.5 rounded-full bg-background/70 px-1.5 py-0.5 text-[10px] text-foreground font-bold">
+                {likeCount}
+              </span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
-            className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/40 bg-emerald-600/15 p-3 font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/25 hover:scale-[1.02] active:scale-95 transition"
-          >
-            <Share2 className="h-5 w-5 mb-1 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-xs font-black">WhatsApp</span>
-            <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80">Compartilhar</span>
-          </button>
-
-          {/* Botão Salvar na agenda (Google Calendar) com duração de 2h e horário de Brasília */}
-          <a
-            href={createGoogleCalendarLink()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-3 font-bold text-foreground hover:bg-card/80 hover:border-primary/50 hover:scale-[1.02] active:scale-95 transition"
-            title="Salvar jogo no Google Calendar"
-          >
-            <Calendar className="h-5 w-5 mb-1 text-primary" />
-            <span className="text-xs font-black text-center leading-tight">Salvar na agenda</span>
-            <span className="text-[10px] text-muted-foreground">Google Calendar (2h)</span>
-          </a>
+            <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-medium">
+              <span>🔔</span>
+              <span>Lembrete 15min antes no .ics</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
