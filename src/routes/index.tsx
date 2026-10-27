@@ -14,7 +14,6 @@ import {
   Heart,
   Calendar,
   CalendarPlus,
-  Download,
   ChevronRight as ChevronRightIcon,
   Tv,
   Radio,
@@ -32,7 +31,7 @@ import {
   shareSingleMatchOnWhatsApp,
   shareFloatingButton,
 } from "../lib/whatsapp";
-import { getGoogleCalendarUrl, downloadCalendarIcs } from "../lib/calendar";
+import { getGoogleCalendarUrl } from "../lib/calendar";
 import { WhatsAppIcon } from "../components/icons/whatsapp-icon";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
@@ -1328,40 +1327,27 @@ function MatchDetailsModal({
               </div>
             </button>
 
-            {/* Botão Salvar na Agenda */}
-            <div className="flex items-stretch gap-1.5">
-              <a
-                href={calendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex-1 relative flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 font-bold shadow-lg shadow-indigo-950/20 active:scale-[0.98] transition-all overflow-hidden border border-blue-400/30 cursor-pointer"
-                title="Salvar no Google Calendar (2h)"
-              >
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
-                  <CalendarPlus className="h-5 w-5 text-white" />
-                </div>
-                <div className="flex flex-col text-left min-w-0">
-                  <span className="text-sm font-extrabold leading-tight truncate">Salvar na Agenda</span>
-                  <span className="text-[11px] text-blue-100 font-medium leading-tight truncate">Google Calendar (2h)</span>
-                </div>
-              </a>
-
-              {/* Botão Download .ICS para Apple / iPhone / Outlook com alarme de 15min */}
-              <button
-                type="button"
-                onClick={() => downloadCalendarIcs(match, displayDate)}
-                className="flex flex-col items-center justify-center px-3.5 rounded-2xl border border-border/80 bg-background/60 hover:bg-muted text-muted-foreground hover:text-foreground active:scale-95 transition cursor-pointer"
-                title="Baixar lembrete (.ics) com alarme de 15 minutos antes para iPhone, Apple Agenda ou Outlook"
-              >
-                <Download className="h-4 w-4" />
-                <span className="text-[9px] font-black uppercase tracking-tight mt-0.5">.ICS</span>
-              </button>
-            </div>
+            {/* Botão Lembrete na Agenda Google */}
+            <a
+              href={calendarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white p-3.5 font-bold shadow-lg shadow-indigo-950/20 active:scale-[0.98] transition-all overflow-hidden border border-blue-400/30 cursor-pointer"
+              title="Agendar lembrete no Google Agenda"
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 shrink-0 shadow-inner">
+                <CalendarPlus className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="text-sm font-extrabold leading-tight truncate">Lembrete na Agenda</span>
+                <span className="text-[11px] text-blue-100 font-medium leading-tight truncate">Salvar no Google Agenda</span>
+              </div>
+            </a>
           </div>
 
-          {/* Linha de Apoio: Curtir com contador + aviso de lembrete */}
-          <div className="flex items-center justify-between px-1 pt-0.5">
+          {/* Linha de Apoio: Curtir com contador real */}
+          <div className="flex items-center justify-start px-1 pt-0.5">
             <button
               type="button"
               onClick={onToggleLike}
@@ -1377,11 +1363,6 @@ function MatchDetailsModal({
                 {likeCount}
               </span>
             </button>
-
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-medium">
-              <span>🔔</span>
-              <span>Lembrete 15min antes no .ics</span>
-            </span>
           </div>
         </div>
       </div>

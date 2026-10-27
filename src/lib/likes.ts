@@ -36,17 +36,10 @@ export function useLikes() {
     return likedMatches.includes(matchId);
   };
 
-  const getLikeCount = (matchId: string, initialBase = 12): number => {
-    // Generate a pleasant deterministic pseudo base count if not modified
-    let base = initialBase;
-    if (matchId) {
-      let h = 0;
-      for (let i = 0; i < matchId.length; i++) {
-        h = (h * 31 + matchId.charCodeAt(i)) % 89;
-      }
-      base = 15 + Math.abs(h);
-    }
-    return (likeCounts[matchId] ?? base) + (isLiked(matchId) ? 1 : 0);
+  const getLikeCount = (matchId: string): number => {
+    if (!matchId) return 0;
+    const baseCount = likeCounts[matchId] ?? 0;
+    return baseCount + (isLiked(matchId) ? 1 : 0);
   };
 
   const toggleLike = (matchId: string) => {
