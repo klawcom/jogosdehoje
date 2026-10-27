@@ -1307,16 +1307,16 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* LINHA INFERIOR: AÇÕES ALINHADAS (Curtir, Google Calendar, WhatsApp) */}
-        <div className="relative z-10 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+        {/* LINHA INFERIOR: AÇÕES ALINHADAS (Curtir, Google Calendar, WhatsApp, Fechar) */}
+        <div className="relative z-10 pt-3 border-t border-border/60 flex items-center justify-between gap-2 min-w-0">
           {/* Lado esquerdo: Três ícones alinhados (Coração com contador, Agenda Google e WhatsApp) */}
-          <div className="flex items-center gap-2">
-            {/* 1. Curtir: apenas ícone de coração com contador de curtidas */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* 1. Curtir: apenas ícone de coração com contador de curtidas (sem o texto 'Curtir jogo') */}
             <button
               type="button"
               onClick={onToggleLike}
               title={isLiked ? "Descurtir jogo" : "Curtir jogo"}
-              className={`inline-flex items-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
+              className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
                 isLiked
                   ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm"
                   : "bg-muted/40 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -1327,35 +1327,34 @@ function MatchDetailsModal({
               <span className="font-extrabold">{likeCount}</span>
             </button>
 
-            {/* 2. Lembrete na agenda (Google Calendar): apenas ícone com legenda */}
-            <a
-              href={calendarUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* 2. Lembrete na agenda (Google Calendar): botão com ícone e legenda */}
+            <button
+              type="button"
+              onClick={() => window.open(calendarUrl, "_blank", "noopener,noreferrer")}
               title="Lembrete na agenda (Google Calendar)"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
+              className="inline-flex shrink-0 h-10 w-10 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
               aria-label="Lembrete na agenda (Google Calendar)"
             >
               <CalendarPlus className="h-4 w-4" />
-            </a>
+            </button>
 
-            {/* 3. WhatsApp: apenas ícone com legenda */}
+            {/* 3. WhatsApp: botão com ícone e legenda */}
             <button
               type="button"
               onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
               title="Compartilhar no WhatsApp"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
+              className="inline-flex shrink-0 h-10 w-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:scale-105 active:scale-95 transition cursor-pointer shadow-sm"
               aria-label="Compartilhar no WhatsApp"
             >
               <WhatsAppIcon className="h-4 w-4 fill-current" />
             </button>
           </div>
 
-          {/* Lado direito: Botão Fechar compacto para celular e desktop */}
+          {/* Lado direito: Botão Fechar discreto no fim da linha */}
           <button
             type="button"
             onClick={onClose}
-            className="h-10 px-4 rounded-xl border border-border/70 bg-muted/30 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer active:scale-95"
+            className="h-10 px-4 rounded-xl border border-border/70 bg-muted/30 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer active:scale-95 shrink-0"
           >
             Fechar
           </button>
