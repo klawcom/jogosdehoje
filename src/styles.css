@@ -35,7 +35,38 @@
 
 :root {
   --radius: 0.875rem;
-  /* Dark Mode Default - Jogos de Hoje */
+
+  /* Light Mode Tokens (Clean, crisp, high contrast) */
+  --background: oklch(0.975 0.008 240);
+  --foreground: oklch(0.15 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 250);
+  /* Rich pitch emerald green */
+  --primary: oklch(0.52 0.17 145);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-glow: oklch(0.55 0.18 145 / 0.25);
+  --secondary: oklch(0.94 0.01 240);
+  --secondary-foreground: oklch(0.18 0.02 250);
+  --muted: oklch(0.93 0.008 240);
+  --muted-foreground: oklch(0.42 0.02 250);
+  --accent: oklch(0.52 0.17 145);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.88 0.012 240);
+  --input: oklch(0.92 0.01 240);
+  --ring: oklch(0.52 0.17 145);
+
+  --gradient-pitch: radial-gradient(circle at 50% 0%, oklch(0.52 0.17 145 / 0.08) 0%, transparent 70%);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  --gradient-action: linear-gradient(135deg, oklch(0.52 0.17 145), oklch(0.48 0.16 160));
+  --shadow-emerald: 0 0 25px -5px oklch(0.52 0.17 145 / 0.15);
+}
+
+.dark {
+  /* Dark Mode Tokens (Deep pitch obsidian) */
   --background: oklch(0.11 0.012 250);
   --foreground: oklch(0.98 0.005 250);
   --card: oklch(0.16 0.015 250);

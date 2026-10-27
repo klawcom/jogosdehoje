@@ -9,6 +9,8 @@ export interface MatchStatusInfo {
   isLive: boolean;
   isFinished: boolean;
   isUpcoming: boolean;
+  hasScore: boolean;
+  scoreText?: string;
   badgeStyle: {
     bg: string;
     text: string;
@@ -21,6 +23,44 @@ export interface MatchStatusInfo {
  * Calculates real-time match status (Em breve, Ao vivo com minuto, ou Encerrado)
  */
 export function getMatchStatus(match: MatchItem): MatchStatusInfo {
+  const hasScore = match.score_home != null && match.score_away != null;
+  const scoreText = hasScore ? `${match.score_home} x ${match.score_away}` : undefined;
+
+  // 0. If match was explicitly flagged by live scoreboard
+  if (match.is_finished) {
+    return {
+      state: 'encerrado',
+      label: match.status_desc || 'Encerrado',
+      isLive: false,
+      isFinished: true,
+      isUpcoming: false,
+      hasScore,
+      scoreText,
+      badgeStyle: {
+        bg: 'bg-muted/40',
+        text: 'text-muted-foreground/80',
+        border: 'border-border/40',
+      },
+    };
+  }
+
+  if (match.is_live) {
+    return {
+      state: 'ao_vivo',
+      label: match.status_desc || 'Ao vivo',
+      isLive: true,
+      isFinished: false,
+      isUpcoming: false,
+      hasScore,
+      scoreText,
+      badgeStyle: {
+        bg: 'bg-rose-500/20',
+        text: 'text-rose-400',
+        border: 'border-rose-500/50',
+        pulse: true,
+      },
+    };
+  }
   const todayBrt = getBrasiliaDateString();
   const nowBrt = getBrasiliaTimeString(); // "19:55"
 
@@ -32,6 +72,8 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       isLive: false,
       isFinished: true,
       isUpcoming: false,
+      hasScore,
+      scoreText,
       badgeStyle: {
         bg: 'bg-muted/40',
         text: 'text-muted-foreground/80',
@@ -48,6 +90,8 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       isLive: false,
       isFinished: false,
       isUpcoming: true,
+      hasScore,
+      scoreText,
       badgeStyle: {
         bg: 'bg-slate-800/40',
         text: 'text-slate-300',
@@ -72,6 +116,8 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       isLive: false,
       isFinished: false,
       isUpcoming: true,
+      hasScore,
+      scoreText,
       badgeStyle: {
         bg: 'bg-emerald-500/10',
         text: 'text-emerald-400',
@@ -99,6 +145,8 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       isLive: true,
       isFinished: false,
       isUpcoming: false,
+      hasScore,
+      scoreText,
       badgeStyle: {
         bg: 'bg-rose-500/20',
         text: 'text-rose-400',
@@ -115,6 +163,8 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
     isLive: false,
     isFinished: true,
     isUpcoming: false,
+    hasScore,
+    scoreText,
     badgeStyle: {
       bg: 'bg-muted/40',
       text: 'text-muted-foreground/75',

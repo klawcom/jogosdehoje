@@ -16,17 +16,25 @@ import {
   ChevronRight as ChevronRightIcon,
   Tv,
   Radio,
+  Sun,
+  Moon,
 } from "lucide-react";
-import { fetchMatchesServerFn } from "../lib/server-fn";
+import { fetchMatchesServerFn, fetchLiveScoresServerFn } from "../lib/server-fn";
 import { DaySchedule, MatchItem, ChannelType } from "../lib/types";
 import { getChannelBadgeStyles } from "../lib/channel-helper";
 import { ChannelLogo } from "../lib/channel-logos";
 import { getTeamLogo, getTeamInitialsBadge } from "../lib/team-logos";
 import { getMatchStatus } from "../lib/match-status";
-import { shareMatchesOnWhatsApp, shareSingleMatchOnWhatsApp } from "../lib/whatsapp";
+import {
+  shareMatchesOnWhatsApp,
+  shareSingleMatchOnWhatsApp,
+  shareFloatingButton,
+} from "../lib/whatsapp";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
+import { useTheme } from "../lib/theme";
+import { enrichMatchesWithScores } from "../lib/live-scores";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
@@ -104,82 +112,82 @@ function getTimeSlotTheme(slotIndex: number): TimeSlotTheme {
     // 1. Esmeralda / Verde (Padrão Principal)
     {
       name: "emerald",
-      badgeBg: "bg-emerald-500/15",
-      badgeText: "text-emerald-400",
-      badgeBorder: "border-emerald-500/30",
-      iconBg: "bg-emerald-500/20",
-      iconText: "text-emerald-400",
-      cardBorder: "border-emerald-500/25",
-      cardHover: "hover:border-emerald-400/60",
-      cardGlow: "hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]",
-      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
-      timeBadgeBg: "bg-emerald-500/15",
-      timeBadgeText: "text-emerald-300",
-      timeBadgeBorder: "border-emerald-500/40",
+      badgeBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
+      badgeText: "text-emerald-700 dark:text-emerald-400",
+      badgeBorder: "border-emerald-500/25 dark:border-emerald-500/30",
+      iconBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
+      iconText: "text-emerald-700 dark:text-emerald-400",
+      cardBorder: "border-emerald-200 dark:border-emerald-500/25",
+      cardHover: "hover:border-emerald-400 dark:hover:border-emerald-400/60",
+      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]",
+      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
+      timeBadgeBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
+      timeBadgeText: "text-emerald-800 dark:text-emerald-300",
+      timeBadgeBorder: "border-emerald-500/30 dark:border-emerald-500/40",
     },
     // 2. Azul Céu (Padrão TV Fechada)
     {
       name: "sky",
-      badgeBg: "bg-sky-500/15",
-      badgeText: "text-sky-400",
-      badgeBorder: "border-sky-500/30",
-      iconBg: "bg-sky-500/20",
-      iconText: "text-sky-400",
-      cardBorder: "border-sky-500/25",
-      cardHover: "hover:border-sky-400/60",
-      cardGlow: "hover:shadow-[0_0_20px_rgba(14,165,233,0.12)]",
-      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
-      timeBadgeBg: "bg-sky-500/15",
-      timeBadgeText: "text-sky-300",
-      timeBadgeBorder: "border-sky-500/40",
+      badgeBg: "bg-sky-500/10 dark:bg-sky-500/15",
+      badgeText: "text-sky-700 dark:text-sky-400",
+      badgeBorder: "border-sky-500/25 dark:border-sky-500/30",
+      iconBg: "bg-sky-500/15 dark:bg-sky-500/20",
+      iconText: "text-sky-700 dark:text-sky-400",
+      cardBorder: "border-sky-200 dark:border-sky-500/25",
+      cardHover: "hover:border-sky-400 dark:hover:border-sky-400/60",
+      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(14,165,233,0.12)]",
+      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
+      timeBadgeBg: "bg-sky-500/10 dark:bg-sky-500/15",
+      timeBadgeText: "text-sky-800 dark:text-sky-300",
+      timeBadgeBorder: "border-sky-500/30 dark:border-sky-500/40",
     },
     // 3. Roxo / Violeta (Padrão Streaming)
     {
       name: "violet",
-      badgeBg: "bg-violet-500/15",
-      badgeText: "text-violet-400",
-      badgeBorder: "border-violet-500/30",
-      iconBg: "bg-violet-500/20",
-      iconText: "text-violet-400",
-      cardBorder: "border-violet-500/25",
-      cardHover: "hover:border-violet-400/60",
-      cardGlow: "hover:shadow-[0_0_20px_rgba(168,85,247,0.12)]",
-      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
-      timeBadgeBg: "bg-violet-500/15",
-      timeBadgeText: "text-violet-300",
-      timeBadgeBorder: "border-violet-500/40",
+      badgeBg: "bg-violet-500/10 dark:bg-violet-500/15",
+      badgeText: "text-violet-700 dark:text-violet-400",
+      badgeBorder: "border-violet-500/25 dark:border-violet-500/30",
+      iconBg: "bg-violet-500/15 dark:bg-violet-500/20",
+      iconText: "text-violet-700 dark:text-violet-400",
+      cardBorder: "border-violet-200 dark:border-violet-500/25",
+      cardHover: "hover:border-violet-400 dark:hover:border-violet-400/60",
+      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(168,85,247,0.12)]",
+      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
+      timeBadgeBg: "bg-violet-500/10 dark:bg-violet-500/15",
+      timeBadgeText: "text-violet-800 dark:text-violet-300",
+      timeBadgeBorder: "border-violet-500/30 dark:border-violet-500/40",
     },
     // 4. Dourado / Âmbar (Padrão Destaques & Favoritos)
     {
       name: "amber",
-      badgeBg: "bg-amber-500/15",
-      badgeText: "text-amber-400",
-      badgeBorder: "border-amber-500/30",
-      iconBg: "bg-amber-500/20",
-      iconText: "text-amber-400",
-      cardBorder: "border-amber-500/25",
-      cardHover: "hover:border-amber-400/60",
-      cardGlow: "hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]",
-      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
-      timeBadgeBg: "bg-amber-500/15",
-      timeBadgeText: "text-amber-300",
-      timeBadgeBorder: "border-amber-500/40",
+      badgeBg: "bg-amber-500/10 dark:bg-amber-500/15",
+      badgeText: "text-amber-700 dark:text-amber-400",
+      badgeBorder: "border-amber-500/25 dark:border-amber-500/30",
+      iconBg: "bg-amber-500/15 dark:bg-amber-500/20",
+      iconText: "text-amber-700 dark:text-amber-400",
+      cardBorder: "border-amber-200 dark:border-amber-500/25",
+      cardHover: "hover:border-amber-400 dark:hover:border-amber-400/60",
+      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]",
+      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
+      timeBadgeBg: "bg-amber-500/10 dark:bg-amber-500/15",
+      timeBadgeText: "text-amber-800 dark:text-amber-300",
+      timeBadgeBorder: "border-amber-500/30 dark:border-amber-500/40",
     },
     // 5. Turquesa / Teal (Padrão Especial)
     {
       name: "teal",
-      badgeBg: "bg-teal-500/15",
-      badgeText: "text-teal-400",
-      badgeBorder: "border-teal-500/30",
-      iconBg: "bg-teal-500/20",
-      iconText: "text-teal-400",
-      cardBorder: "border-teal-500/25",
-      cardHover: "hover:border-teal-400/60",
-      cardGlow: "hover:shadow-[0_0_20px_rgba(20,184,166,0.12)]",
-      cardBgGradient: "bg-gradient-to-b from-card/90 to-card/75",
-      timeBadgeBg: "bg-teal-500/15",
-      timeBadgeText: "text-teal-300",
-      timeBadgeBorder: "border-teal-500/40",
+      badgeBg: "bg-teal-500/10 dark:bg-teal-500/15",
+      badgeText: "text-teal-700 dark:text-teal-400",
+      badgeBorder: "border-teal-500/25 dark:border-teal-500/30",
+      iconBg: "bg-teal-500/15 dark:bg-teal-500/20",
+      iconText: "text-teal-700 dark:text-teal-400",
+      cardBorder: "border-teal-200 dark:border-teal-500/25",
+      cardHover: "hover:border-teal-400 dark:hover:border-teal-400/60",
+      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(20,184,166,0.12)]",
+      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
+      timeBadgeBg: "bg-teal-500/10 dark:bg-teal-500/15",
+      timeBadgeText: "text-teal-800 dark:text-teal-300",
+      timeBadgeBorder: "border-teal-500/30 dark:border-teal-500/40",
     },
   ];
 
@@ -203,6 +211,7 @@ function JogosDeHoje() {
   // Active match for details modal/page
   const [activeMatch, setActiveMatch] = useState<MatchItem | null>(null);
 
+  const { theme, isDark, toggleTheme } = useTheme();
   const { favorites, toggleFavorite, isFavorite, matchHasFavorite } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
 
@@ -215,13 +224,42 @@ function JogosDeHoje() {
     }
   }, [days]);
 
+  // Silent background auto-update for live scores and status without page reload
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      try {
+        const allMatches = days.flatMap((d) => d.matches);
+        if (allMatches.length === 0) return;
+        const res = await fetchLiveScoresServerFn({ data: allMatches });
+        if (res && res.success && res.scores && Object.keys(res.scores).length > 0) {
+          setDays((prevDays) =>
+            prevDays.map((d) => ({
+              ...d,
+              matches: enrichMatchesWithScores(d.matches, res.scores),
+            }))
+          );
+        }
+      } catch {
+        // Silent failure in background
+      }
+    }, 45000);
+
+    return () => clearInterval(timer);
+  }, [days]);
+
   const currentDay: DaySchedule | undefined = days[selectedDayIndex] || days[0];
 
   const handleRefresh = async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      const res = await scrapeGoalMatches();
+      let res: any = null;
+      try {
+        res = await fetchMatchesServerFn();
+      } catch {
+        res = await scrapeGoalMatches();
+      }
       if (res && res.days && res.days.length > 0) {
         setDays(res.days);
         setLastUpdated(res.lastUpdated);
@@ -337,11 +375,11 @@ function JogosDeHoje() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight sm:text-xl text-white">
+                <h1 className="text-lg font-black tracking-tight sm:text-xl text-foreground">
                   Jogos <span className="text-primary font-black">de Hoje</span>
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400 border border-emerald-500/25">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                   Brasília (UTC-3)
                 </span>
               </div>
@@ -353,10 +391,10 @@ function JogosDeHoje() {
                   onClick={handleRefresh}
                   disabled={isRefreshing}
                   title="Atualizar jogos agora"
-                  className="inline-flex items-center text-primary hover:text-emerald-300 transition-colors ml-0.5 p-0.5 rounded"
+                  className="inline-flex items-center text-primary hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors ml-0.5 p-0.5 rounded"
                 >
                   <RefreshCw
-                    className={`h-3 w-3 ${isRefreshing ? "animate-spin text-emerald-400" : ""}`}
+                    className={`h-3 w-3 ${isRefreshing ? "animate-spin text-emerald-500 dark:text-emerald-400" : ""}`}
                   />
                 </button>
               </p>
@@ -364,11 +402,26 @@ function JogosDeHoje() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Theme Toggle (Sol / Lua) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/70 text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
+              title={isDark ? "Mudar para tema claro" : "Mudar para tema escuro"}
+              aria-label="Alternar tema claro e escuro"
+            >
+              {isDark ? (
+                <Sun className="h-4 w-4 text-amber-400" />
+              ) : (
+                <Moon className="h-4 w-4 text-indigo-600" />
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setShowFavoritesModal(true)}
-              className="relative flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-3 py-2 text-xs font-bold text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
+              className="relative flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-2.5 sm:px-3 py-2 text-xs font-bold text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
               title="Meus times favoritos"
             >
               <Star
@@ -376,20 +429,21 @@ function JogosDeHoje() {
               />
               <span className="hidden sm:inline">Favoritos</span>
               {favorites.length > 0 && (
-                <span className="rounded-full bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
+                <span className="rounded-full bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-300">
                   {favorites.length}
                 </span>
               )}
             </button>
 
+            {/* Restored WhatsApp button at top */}
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition"
-              title="Compartilhar lista completa no WhatsApp"
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition"
+              title="Compartilhar programação completa no WhatsApp"
             >
               <Share2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">WhatsApp</span>
+              <span className="font-bold">WhatsApp</span>
             </button>
           </div>
         </div>
@@ -417,7 +471,7 @@ function JogosDeHoje() {
                     HOJE
                   </span>
                 )}
-                <h2 className="text-sm sm:text-base font-extrabold text-white truncate">
+                <h2 className="text-sm sm:text-base font-extrabold text-foreground truncate">
                   {currentDay?.displayDate || "Jogos de Hoje"}
                 </h2>
               </div>
@@ -593,9 +647,9 @@ function JogosDeHoje() {
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400 text-amber-950 font-bold shadow-sm">
                   <Star className="h-3.5 w-3.5 fill-amber-950" />
                 </div>
-                <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                <h3 className="text-sm font-extrabold text-foreground flex items-center gap-1.5">
                   Seus Times em Campo
-                  <span className="rounded-full bg-amber-400/20 px-2 py-0.2 text-[10px] font-bold text-amber-300">
+                  <span className="rounded-full bg-amber-400/20 px-2 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-300">
                     {favoriteMatches.length}
                   </span>
                 </h3>
@@ -632,7 +686,7 @@ function JogosDeHoje() {
                       <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${theme.iconBg} ${theme.iconText} shadow-sm ring-1 ring-white/10`}>
                         <Clock className="h-3.5 w-3.5" />
                       </span>
-                      <h3 className="font-black text-sm sm:text-base text-white tracking-wide flex items-center gap-1.5">
+                      <h3 className="font-black text-sm sm:text-base text-foreground tracking-wide flex items-center gap-1.5">
                         <span className={theme.badgeText}>{time}</span>
                         <span className="text-[11px] font-medium text-muted-foreground">(Brasília)</span>
                       </h3>
@@ -898,28 +952,35 @@ function CompactMatchCard({
             <span
               className={`text-[15px] sm:text-base font-bold tracking-tight truncate ${
                 homeFav
-                  ? "text-amber-300 font-extrabold"
+                  ? "text-amber-600 dark:text-amber-300 font-extrabold"
                   : status.isFinished
                   ? "text-muted-foreground"
-                  : "text-white"
+                  : "text-foreground"
               }`}
             >
               {match.team_home}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(match.team_home);
-            }}
-            className="p-1 text-muted-foreground hover:text-amber-400 transition"
-            title={homeFav ? "Remover dos favoritos" : "Favoritar time"}
-          >
-            <Star
-              className={`h-3.5 w-3.5 ${homeFav ? "fill-amber-400 text-amber-400" : "opacity-30 group-hover:opacity-100"}`}
-            />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {(status.isLive || status.isFinished) && match.score_home != null && (
+              <span className="flex h-6 min-w-[22px] px-1.5 items-center justify-center rounded-md bg-muted/80 text-foreground font-black text-xs sm:text-sm border border-border/70">
+                {match.score_home}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(match.team_home);
+              }}
+              className="p-1 text-muted-foreground hover:text-amber-400 transition"
+              title={homeFav ? "Remover dos favoritos" : "Favoritar time"}
+            >
+              <Star
+                className={`h-3.5 w-3.5 ${homeFav ? "fill-amber-400 text-amber-400" : "opacity-30 group-hover:opacity-100"}`}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Team Away */}
@@ -929,30 +990,37 @@ function CompactMatchCard({
             <span
               className={`text-[15px] sm:text-base font-bold tracking-tight truncate ${
                 awayFav
-                  ? "text-amber-300 font-extrabold"
+                  ? "text-amber-600 dark:text-amber-300 font-extrabold"
                   : status.isFinished
                   ? "text-muted-foreground"
-                  : "text-white"
+                  : "text-foreground"
               }`}
             >
               {match.team_away || "A definir"}
             </span>
           </div>
-          {match.team_away && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(match.team_away);
-              }}
-              className="p-1 text-muted-foreground hover:text-amber-400 transition"
-              title={awayFav ? "Remover dos favoritos" : "Favoritar time"}
-            >
-              <Star
-                className={`h-3.5 w-3.5 ${awayFav ? "fill-amber-400 text-amber-400" : "opacity-30 group-hover:opacity-100"}`}
-              />
-            </button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {(status.isLive || status.isFinished) && match.score_away != null && (
+              <span className="flex h-6 min-w-[22px] px-1.5 items-center justify-center rounded-md bg-muted/80 text-foreground font-black text-xs sm:text-sm border border-border/70">
+                {match.score_away}
+              </span>
+            )}
+            {match.team_away && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(match.team_away);
+                }}
+                className="p-1 text-muted-foreground hover:text-amber-400 transition"
+                title={awayFav ? "Remover dos favoritos" : "Favoritar time"}
+              >
+                <Star
+                  className={`h-3.5 w-3.5 ${awayFav ? "fill-amber-400 text-amber-400" : "opacity-30 group-hover:opacity-100"}`}
+                />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1015,19 +1083,19 @@ function MatchDetailsModal({
 
   const createGoogleCalendarLink = () => {
     try {
-      const [year, month, day] = match.date.split("-");
-      const [hh, mm] = match.time_br.split(":");
-      const startHourUtc = (parseInt(hh, 10) + 3) % 24;
-      const startHh = String(startHourUtc).padStart(2, "0");
-      const startIso = `${year}${month}${day}T${startHh}${mm}00Z`;
+      const [year, month, day] = (match.date || "").split("-").map(Number);
+      const [hh, mm] = (match.time_br || "16:00").split(":").map(Number);
+      // Brasília time is UTC-3, so UTC hour is hh + 3
+      const startUtc = new Date(Date.UTC(year, month - 1, day, hh + 3, mm, 0));
+      const endUtc = new Date(startUtc.getTime() + 2 * 60 * 60 * 1000); // Duration: 2h
+      const formatUtc = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
-      const endHourUtc = (startHourUtc + 2) % 24;
-      const endHh = String(endHourUtc).padStart(2, "0");
-      const endIso = `${year}${month}${day}T${endHh}${mm}00Z`;
+      const startIso = formatUtc(startUtc);
+      const endIso = formatUtc(endUtc);
 
       const title = `${match.match_title} (${match.championship})`;
-      const channelsText = match.channels.map((c) => c.name).join(", ");
-      const details = `Jogo: ${match.match_title}\nCampeonato: ${match.championship}\nOnde Assistir: ${channelsText}\nHorário de Brasília: ${match.time_br}\n\nAcesse: https://jogosdehoje.lovable.app`;
+      const channelsText = match.channels.map((c) => c.name).join(", ") || "A definir";
+      const details = `⚽ Jogo: ${match.match_title}\n🏆 Campeonato: ${match.championship}\n⏰ Horário de Brasília: ${match.time_br} (Duração: 2h)\n📺 Onde Assistir: ${channelsText}\n\n📲 Acompanhe todos os jogos no Jogos de Hoje:\nhttps://jogosdehoje.lovable.app`;
 
       return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
         title
@@ -1049,7 +1117,7 @@ function MatchDetailsModal({
               <Trophy className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-xs font-bold text-white uppercase tracking-wider">
+              <p className="text-xs font-bold text-foreground uppercase tracking-wider">
                 {match.championship}
               </p>
               <p className="text-[11px] text-muted-foreground">{displayDate}</p>
@@ -1058,14 +1126,14 @@ function MatchDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-muted-foreground hover:text-white transition"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-background/60 text-muted-foreground hover:text-foreground transition"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* HERO CONFRONTATION: Big Escudos & Team Names */}
-        <div className="relative z-10 my-6 rounded-2xl bg-gradient-to-b from-background/90 to-background/50 border border-border/80 p-5 text-center shadow-inner">
+        <div className="relative z-10 my-6 rounded-2xl bg-muted/40 border border-border/80 p-5 text-center shadow-inner">
           <div className="flex items-center justify-around gap-2">
             {/* Team Home */}
             <div className="flex-1 flex flex-col items-center">
@@ -1077,7 +1145,7 @@ function MatchDetailsModal({
                   </span>
                 )}
               </div>
-              <h4 className="text-base sm:text-lg font-black text-white leading-tight">
+              <h4 className="text-base sm:text-lg font-black text-foreground leading-tight">
                 {match.team_home}
               </h4>
               <button
@@ -1086,7 +1154,7 @@ function MatchDetailsModal({
                 className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold transition ${
                   homeFav
                     ? "bg-amber-400 text-amber-950"
-                    : "bg-card text-muted-foreground border border-border hover:text-white"
+                    : "bg-card text-muted-foreground border border-border hover:text-foreground"
                 }`}
               >
                 <Star className={`h-3 w-3 ${homeFav ? "fill-amber-950" : ""}`} />
@@ -1094,7 +1162,7 @@ function MatchDetailsModal({
               </button>
             </div>
 
-            {/* Status & Horário */}
+            {/* Status, Placar ou Horário */}
             <div className="flex flex-col items-center justify-center px-2">
               <div
                 className={`rounded-full border px-3 py-1 text-xs font-black flex items-center gap-1.5 ${status.badgeStyle.bg} ${status.badgeStyle.border} ${status.badgeStyle.text}`}
@@ -1107,13 +1175,30 @@ function MatchDetailsModal({
                 )}
                 <span>{status.label}</span>
               </div>
-              <span className="text-sm font-extrabold text-white mt-1">
-                {match.time_br}
-              </span>
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                Brasília
-              </span>
-              <span className="text-xs font-black text-muted-foreground/50 my-1">VS</span>
+
+              {/* Placar (ex.: 2 x 1) no lugar do VS para jogos ao vivo e encerrados */}
+              {(status.isLive || status.isFinished) && match.score_home != null && match.score_away != null ? (
+                <div className="my-2 flex flex-col items-center">
+                  <div className="px-4 py-1.5 rounded-2xl bg-card border border-border shadow-md">
+                    <span className="text-2xl sm:text-3xl font-black text-foreground tracking-widest">
+                      {match.score_home} x {match.score_away}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-semibold mt-1">
+                    Início: {match.time_br} (Brasília)
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <span className="text-sm font-extrabold text-foreground mt-1">
+                    {match.time_br}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    Brasília
+                  </span>
+                  <span className="text-xs font-black text-muted-foreground/60 my-1">VS</span>
+                </>
+              )}
             </div>
 
             {/* Team Away */}
@@ -1126,7 +1211,7 @@ function MatchDetailsModal({
                   </span>
                 )}
               </div>
-              <h4 className="text-base sm:text-lg font-black text-white leading-tight">
+              <h4 className="text-base sm:text-lg font-black text-foreground leading-tight">
                 {match.team_away || "A definir"}
               </h4>
               {match.team_away && (
@@ -1136,7 +1221,7 @@ function MatchDetailsModal({
                   className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold transition ${
                     awayFav
                       ? "bg-amber-400 text-amber-950"
-                      : "bg-card text-muted-foreground border border-border hover:text-white"
+                      : "bg-card text-muted-foreground border border-border hover:text-foreground"
                   }`}
                 >
                   <Star className={`h-3 w-3 ${awayFav ? "fill-amber-950" : ""}`} />
@@ -1172,14 +1257,14 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* ACTIONS: Curtir, WhatsApp, Agenda */}
+        {/* ACTIONS: Curtir, WhatsApp, Salvar na agenda (Google Calendar) */}
         <div className="relative z-10 grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={onToggleLike}
             className={`flex flex-col items-center justify-center rounded-2xl border p-3 font-bold transition-all ${
               isLiked
-                ? "bg-rose-500/20 border-rose-500/50 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)] scale-[1.02]"
+                ? "bg-rose-500/20 border-rose-500/50 text-rose-600 dark:text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)] scale-[1.02]"
                 : "bg-card border-border text-foreground hover:bg-card/80 hover:border-rose-500/40"
             }`}
           >
@@ -1195,22 +1280,24 @@ function MatchDetailsModal({
           <button
             type="button"
             onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
-            className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/40 bg-emerald-600/20 p-3 font-bold text-emerald-300 hover:bg-emerald-600/30 hover:scale-[1.02] active:scale-95 transition"
+            className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/40 bg-emerald-600/15 p-3 font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/25 hover:scale-[1.02] active:scale-95 transition"
           >
-            <Share2 className="h-5 w-5 mb-1 text-emerald-400" />
+            <Share2 className="h-5 w-5 mb-1 text-emerald-600 dark:text-emerald-400" />
             <span className="text-xs font-black">WhatsApp</span>
-            <span className="text-[10px] text-emerald-400/80">Compartilhar</span>
+            <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400/80">Compartilhar</span>
           </button>
 
+          {/* Botão Salvar na agenda (Google Calendar) com duração de 2h e horário de Brasília */}
           <a
             href={createGoogleCalendarLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-3 font-bold text-foreground hover:bg-card/80 hover:border-primary/40 hover:scale-[1.02] active:scale-95 transition"
+            className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-3 font-bold text-foreground hover:bg-card/80 hover:border-primary/50 hover:scale-[1.02] active:scale-95 transition"
+            title="Salvar jogo no Google Calendar"
           >
             <Calendar className="h-5 w-5 mb-1 text-primary" />
-            <span className="text-xs font-black">Lembrete</span>
-            <span className="text-[10px] text-muted-foreground">Google Agenda</span>
+            <span className="text-xs font-black text-center leading-tight">Salvar na agenda</span>
+            <span className="text-[10px] text-muted-foreground">Google Calendar (2h)</span>
           </a>
         </div>
       </div>

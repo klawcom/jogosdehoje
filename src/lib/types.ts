@@ -17,6 +17,11 @@ export interface MatchItem {
   channel_types: ChannelType[];
   source?: string;
   updated_at?: string;
+  score_home?: number | null;
+  score_away?: number | null;
+  status_desc?: string;
+  is_live?: boolean;
+  is_finished?: boolean;
 }
 
 export interface DaySchedule {

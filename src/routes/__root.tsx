@@ -69,6 +69,23 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className="dark">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('jogosdehoje_theme');
+                  var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+                  if (stored === 'light' || (!stored && prefersLight)) {
+                    document.documentElement.classList.remove('dark');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
         <HeadContent />
       </head>
       <body className="min-h-screen bg-background font-['Plus_Jakarta_Sans',sans-serif] text-foreground antialiased selection:bg-primary/20 selection:text-primary">

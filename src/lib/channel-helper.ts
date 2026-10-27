@@ -77,7 +77,7 @@ export function parseChannelsString(raw: string): ChannelBadge[] {
 }
 
 /**
- * Returns color classes for channel tags in dark mode
+ * Returns color classes for channel tags in light and dark mode
  */
 export function getChannelBadgeStyles(type: ChannelType): {
   bg: string;
@@ -90,27 +90,27 @@ export function getChannelBadgeStyles(type: ChannelType): {
   switch (type) {
     case 'aberta':
       return {
-        bg: 'bg-emerald-950/80',
-        text: 'text-emerald-300',
-        border: 'border-emerald-500/40',
+        bg: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-500/40',
+        text: 'text-emerald-900 dark:text-emerald-300',
+        border: 'border-emerald-300 dark:border-emerald-500/40',
         glow: 'shadow-[0_0_12px_rgba(16,185,129,0.18)]',
         iconName: 'tv',
         label: 'TV Aberta',
       };
     case 'fechada':
       return {
-        bg: 'bg-sky-950/80',
-        text: 'text-sky-300',
-        border: 'border-sky-500/40',
+        bg: 'bg-sky-100 text-sky-900 border-sky-300 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-500/40',
+        text: 'text-sky-900 dark:text-sky-300',
+        border: 'border-sky-300 dark:border-sky-500/40',
         glow: 'shadow-[0_0_12px_rgba(14,165,233,0.18)]',
         iconName: 'satellite',
         label: 'TV Fechada',
       };
     case 'streaming':
       return {
-        bg: 'bg-violet-950/80',
-        text: 'text-violet-300',
-        border: 'border-violet-500/40',
+        bg: 'bg-violet-100 text-violet-900 border-violet-300 dark:bg-violet-950/80 dark:text-violet-300 dark:border-violet-500/40',
+        text: 'text-violet-900 dark:text-violet-300',
+        border: 'border-violet-300 dark:border-violet-500/40',
         glow: 'shadow-[0_0_12px_rgba(168,85,247,0.18)]',
         iconName: 'play',
         label: 'Streaming',

@@ -17,10 +17,10 @@ export function ChannelLogo({
   // Disney+
   if (norm.includes('disney')) {
     return (
-      <span className="inline-flex items-center gap-1 font-black text-sky-300">
+      <span className="inline-flex items-center gap-1 font-black text-sky-800 dark:text-sky-300">
         <svg viewBox="0 0 80 32" className={className} fill="currentColor">
-          <text x="2" y="24" fontSize="20" fontWeight="900" fontFamily="sans-serif" fontStyle="italic" fill="#38bdf8">
-            Disney<tspan fill="#ffffff" fontSize="22" fontStyle="normal" dy="-2">+</tspan>
+          <text x="2" y="24" fontSize="20" fontWeight="900" fontFamily="sans-serif" fontStyle="italic" fill="#0284c7">
+            Disney<tspan fill="#ea580c" fontSize="22" fontStyle="normal" dy="-2">+</tspan>
           </text>
         </svg>
       </span>
@@ -30,8 +30,8 @@ export function ChannelLogo({
   // Premiere
   if (norm.includes('premiere')) {
     return (
-      <span className="inline-flex items-center gap-1 font-black text-emerald-300 tracking-wider">
-        <span className="text-amber-400 font-black">P</span>REMIERE
+      <span className="inline-flex items-center gap-1 font-black text-emerald-900 dark:text-emerald-300 tracking-wider">
+        <span className="text-amber-500 dark:text-amber-400 font-black">P</span>REMIERE
       </span>
     );
   }
@@ -41,9 +41,9 @@ export function ChannelLogo({
     const sub = norm.match(/sportv\s*(\d+)?/i);
     const suffix = sub && sub[1] ? ` ${sub[1]}` : '';
     return (
-      <span className="inline-flex items-center gap-1 font-black text-sky-400 tracking-wider">
-        spor<span className="text-white">TV</span>
-        {suffix && <span className="text-amber-400">{suffix}</span>}
+      <span className="inline-flex items-center gap-1 font-black text-sky-600 dark:text-sky-400 tracking-wider">
+        spor<span className="text-slate-900 dark:text-white">TV</span>
+        {suffix && <span className="text-amber-600 dark:text-amber-400">{suffix}</span>}
       </span>
     );
   }
@@ -53,9 +53,9 @@ export function ChannelLogo({
     const sub = norm.match(/espn\s*(\d+|extra)?/i);
     const suffix = sub && sub[1] ? ` ${sub[1]}` : '';
     return (
-      <span className="inline-flex items-center gap-1 font-black italic text-rose-500 tracking-tighter">
+      <span className="inline-flex items-center gap-1 font-black italic text-rose-600 dark:text-rose-500 tracking-tighter">
         <span>ESPN</span>
-        {suffix && <span className="text-white not-italic">{suffix}</span>}
+        {suffix && <span className="text-slate-900 dark:text-white not-italic">{suffix}</span>}
       </span>
     );
   }
@@ -63,7 +63,7 @@ export function ChannelLogo({
   // Globo
   if (norm.includes('globo')) {
     return (
-      <span className="inline-flex items-center gap-1 font-black text-white tracking-wider">
+      <span className="inline-flex items-center gap-1 font-black text-slate-900 dark:text-white tracking-wider">
         <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-tr from-cyan-400 via-pink-500 to-amber-400" />
         <span>GLOBO</span>
       </span>
@@ -73,7 +73,7 @@ export function ChannelLogo({
   // Max / HBO Max
   if (norm.includes('max')) {
     return (
-      <span className="inline-flex items-center font-black tracking-wider text-blue-400">
+      <span className="inline-flex items-center font-black tracking-wider text-blue-600 dark:text-blue-400">
         MAX
       </span>
     );
@@ -82,8 +82,8 @@ export function ChannelLogo({
   // Prime Video
   if (norm.includes('prime') || norm.includes('amazon')) {
     return (
-      <span className="inline-flex items-center font-black text-sky-400 tracking-tight">
-        PRIME <span className="text-white font-semibold">VIDEO</span>
+      <span className="inline-flex items-center font-black text-sky-600 dark:text-sky-400 tracking-tight">
+        PRIME <span className="text-slate-900 dark:text-white font-semibold">VIDEO</span>
       </span>
     );
   }
@@ -91,8 +91,8 @@ export function ChannelLogo({
   // CazéTV
   if (norm.includes('cazé') || norm.includes('caze')) {
     return (
-      <span className="inline-flex items-center font-black text-amber-400 tracking-tight">
-        CAZÉ<span className="text-rose-500">TV</span>
+      <span className="inline-flex items-center font-black text-amber-600 dark:text-amber-400 tracking-tight">
+        CAZÉ<span className="text-rose-600 dark:text-rose-500">TV</span>
       </span>
     );
   }
@@ -100,8 +100,8 @@ export function ChannelLogo({
   // YouTube
   if (norm.includes('youtube')) {
     return (
-      <span className="inline-flex items-center gap-1 font-black text-white">
-        <span className="text-rose-500 text-[10px]">▶</span>
+      <span className="inline-flex items-center gap-1 font-black text-slate-900 dark:text-white">
+        <span className="text-rose-600 dark:text-rose-500 text-[10px]">▶</span>
         <span>YOUTUBE</span>
       </span>
     );

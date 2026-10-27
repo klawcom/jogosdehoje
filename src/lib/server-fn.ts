@@ -1,6 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import { scrapeGoalMatches } from './scraper';
 import { saveMatchesToSupabase, recordSyncLog } from './supabase';
+import { getLiveScoresForMatches, enrichMatchesWithScores, LiveScoreData } from './live-scores';
+import { MatchItem } from './types';
 
 export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(async () => {
   try {
@@ -9,6 +11,20 @@ export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(as
     if (scrapeRes.success && scrapeRes.days.length > 0) {
       // Flatten all matches across days for Supabase upsert
       const allMatches = scrapeRes.days.flatMap(d => d.matches);
+
+      // Fetch live scores
+      try {
+        const scoresMap = await getLiveScoresForMatches(allMatches);
+        if (scoresMap && Object.keys(scoresMap).length > 0) {
+          scrapeRes.days = scrapeRes.days.map(d => ({
+            ...d,
+            matches: enrichMatchesWithScores(d.matches, scoresMap),
+          }));
+        }
+      } catch (scoreErr) {
+        console.warn('[fetchMatchesServerFn] Falha ao enriquecer placares:', scoreErr);
+      }
+
       saveMatchesToSupabase(allMatches).catch(err => {
         console.warn('[Sync] Falha assíncrona ao salvar no Supabase:', err);
       });
@@ -33,3 +49,19 @@ export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(as
     };
   }
 });
+
+/**
+ * Silent background endpoint to fetch updated live scores without reloading the page
+ */
+export const fetchLiveScoresServerFn = createServerFn({ method: 'POST' })
+  .validator((matches: MatchItem[]) => matches)
+  .handler(async ({ data: matches }) => {
+    try {
+      const scores = await getLiveScoresForMatches(matches);
+      return { success: true, scores };
+    } catch (err: any) {
+      console.warn('[fetchLiveScoresServerFn] Erro:', err);
+      return { success: false, scores: {} as Record<string, LiveScoreData> };
+    }
+  });
+
