@@ -2,6 +2,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { scrapeGoalMatches } from './scraper';
 import { saveMatchesToSupabase, recordSyncLog } from './supabase';
 import { getLiveScoresForMatches, enrichMatchesWithScores, LiveScoreData } from './live-scores';
+import { fetchBrasileiraoStandings } from './standings';
 import { MatchItem } from './types';
 
 export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(async () => {
@@ -63,6 +64,15 @@ export const fetchLiveScoresServerFn = createServerFn({ method: 'POST' }).handle
       console.warn('[fetchLiveScoresServerFn] Erro:', err);
       return { success: false, scores: {} as Record<string, LiveScoreData> };
     }
+  }
+);
+
+/**
+ * Fetches live Brasileirão Série A standings for SSR and silent background auto-sync
+ */
+export const fetchBrasileiraoStandingsServerFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    return fetchBrasileiraoStandings();
   }
 );
 

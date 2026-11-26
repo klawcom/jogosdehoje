@@ -49,3 +49,40 @@ export interface FilterOptions {
   selectedChampionship: string;
   selectedChannelType: ChannelType | 'all';
 }
+
+export type StandingZone =
+  | 'libertadores'
+  | 'pre-libertadores'
+  | 'sul-americana'
+  | 'rebaixamento'
+  | 'none';
+
+export interface StandingRow {
+  rank: number;
+  teamId: string;
+  teamName: string;
+  abbreviation: string;
+  logoUrl?: string;
+  points: number;
+  gamesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  winPercentage: number;
+  rankChange: number;
+  overallSummary: string;
+  zone: StandingZone;
+}
+
+export interface StandingsResponse {
+  success: boolean;
+  season: number;
+  seasonDisplayName: string;
+  entries: StandingRow[];
+  lastUpdated: string;
+  source: string;
+  message?: string;
+}

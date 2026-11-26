@@ -1,4 +1,4 @@
-import { MatchItem } from './types';
+import { MatchItem, StandingRow } from './types';
 
 /**
  * Formats match schedule text for WhatsApp or system sharing
@@ -70,6 +70,32 @@ export function shareSingleMatchOnWhatsApp(match: MatchItem, displayDate?: strin
     `🆚 *${match.match_title}*${scoreText}\n\n` +
     `📺 *Onde assistir:* ${channelsText}\n\n` +
     `📲 Veja a programação completa em:\nhttps://jogosdehoje.lovable.app`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+}
+
+/**
+ * Shares a summary of the Brasileirão Série A standings on WhatsApp
+ */
+export function shareBrasileiraoStandingsOnWhatsApp(
+  season: number,
+  entries: StandingRow[],
+  lastUpdated: string
+) {
+  if (!entries || entries.length === 0) return;
+
+  const topSix = entries.slice(0, 6);
+  const zFour = entries.slice(-4);
+
+  const formatRow = (r: StandingRow) =>
+    `${r.rank}º *${r.teamName}* — ${r.points} pts (${r.gamesPlayed}J, ${r.wins}V, SG ${r.goalDifference >= 0 ? `+${r.goalDifference}` : r.goalDifference})`;
+
+  const text =
+    `🏆 *BRASILEIRÃO SÉRIE A ${season} — CLASSIFICAÇÃO* ⚽\n` +
+    `🕒 Atualizado às ${lastUpdated} (Brasília)\n\n` +
+    `🟢 *G-6 (Libertadores):*\n${topSix.map(formatRow).join('\n')}\n\n` +
+    `🔴 *Z-4 (Rebaixamento):*\n${zFour.map(formatRow).join('\n')}\n\n` +
+    `📲 *Veja a tabela completa atualizada em tempo real:*\nhttps://jogosdehoje.lovable.app/brasileirao`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
 }

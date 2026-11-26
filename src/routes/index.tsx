@@ -7,24 +7,19 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
-  RefreshCw,
   X,
   SlidersHorizontal,
   Trophy,
   Heart,
-  Calendar,
   CalendarPlus,
   ChevronRight as ChevronRightIcon,
   Tv,
   Radio,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { fetchMatchesServerFn, fetchLiveScoresServerFn } from "../lib/server-fn";
 import { DaySchedule, MatchItem, ChannelType } from "../lib/types";
 import { getChannelBadgeStyles } from "../lib/channel-helper";
 import { ChannelLogo } from "../lib/channel-logos";
-import { getTeamLogo, getTeamInitialsBadge } from "../lib/team-logos";
 import { getMatchStatus } from "../lib/match-status";
 import {
   shareMatchesOnWhatsApp,
@@ -33,6 +28,8 @@ import {
 } from "../lib/whatsapp";
 import { getGoogleCalendarUrl } from "../lib/calendar";
 import { WhatsAppIcon } from "../components/icons/whatsapp-icon";
+import { SiteHeader } from "../components/site-header";
+import { TeamBadge } from "../components/team-badge";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
@@ -407,87 +404,19 @@ function JogosDeHoje() {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-56 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
 
       {/* HEADER: Jogos de Hoje */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/90 border-b border-border/80 px-4 py-3 sm:px-6">
-        <div className="mx-auto max-w-3xl flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40">
-              <span className="text-xl">⚽</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight sm:text-xl text-foreground">
-                  Jogos <span className="text-primary font-black">de Hoje</span>
-                </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400 border border-emerald-500/25">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                  Brasília (UTC-3)
-                </span>
-              </div>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <span>Atualizado às</span>
-                <strong className="text-foreground font-semibold">{lastUpdated}</strong>
-                <button
-                  type="button"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  title="Atualizar jogos agora"
-                  className="inline-flex items-center text-primary hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors ml-0.5 p-0.5 rounded"
-                >
-                  <RefreshCw
-                    className={`h-3 w-3 ${isRefreshing ? "animate-spin text-emerald-500 dark:text-emerald-400" : ""}`}
-                  />
-                </button>
-              </p>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Theme Toggle (Sol / Lua) */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card/70 text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
-              title={isDark ? "Mudar para tema claro" : "Mudar para tema escuro"}
-              aria-label="Alternar tema claro e escuro"
-            >
-              {isDark ? (
-                <Sun className="h-4 w-4 text-amber-400" />
-              ) : (
-                <Moon className="h-4 w-4 text-indigo-600" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowFavoritesModal(true)}
-              className="relative flex items-center gap-1.5 rounded-xl border border-border bg-card/70 px-2.5 sm:px-3 py-2 text-xs font-bold text-foreground backdrop-blur hover:border-primary/50 hover:bg-card transition"
-              title="Meus times favoritos"
-            >
-              <Star
-                className={`h-4 w-4 ${favorites.length > 0 ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`}
-              />
-              <span className="hidden sm:inline">Favoritos</span>
-              {favorites.length > 0 && (
-                <span className="rounded-full bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-300">
-                  {favorites.length}
-                </span>
-              )}
-            </button>
-
-            {/* Restored WhatsApp button at top */}
-            <button
-              type="button"
-              onClick={handleShareWhatsApp}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition cursor-pointer"
-              title="Compartilhar programação completa no WhatsApp"
-            >
-              <WhatsAppIcon className="h-4 w-4 fill-white" />
-              <span className="font-bold">WhatsApp</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        activePage="matches"
+        lastUpdated={lastUpdated}
+        isRefreshing={isRefreshing}
+        onRefresh={handleRefresh}
+        refreshTitle="Atualizar jogos agora"
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+        favoritesCount={favorites.length}
+        onOpenFavorites={() => setShowFavoritesModal(true)}
+        onShareWhatsApp={handleShareWhatsApp}
+        shareTitle="Compartilhar programação completa no WhatsApp"
+      />
 
       {/* MAIN CONTAINER */}
       <main className="relative z-10 mx-auto max-w-3xl px-3 sm:px-6 pt-3">
@@ -884,48 +813,6 @@ function JogosDeHoje() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ----------------------------------------------------------------------
-// TEAM BADGE (Imagem Local ou Círculo com Iniciais Perfeitas)
-// ----------------------------------------------------------------------
-function TeamBadge({
-  teamName,
-  size = "md",
-}: {
-  teamName: string;
-  size?: "sm" | "md" | "lg";
-}) {
-  const [imgError, setImgError] = useState(false);
-  const logo = getTeamLogo(teamName);
-  const initialsInfo = getTeamInitialsBadge(teamName);
-
-  const sizeClasses = {
-    sm: "h-5 w-5 text-[9px]",
-    md: "h-7 w-7 text-[11px]",
-    lg: "h-16 w-16 sm:h-20 sm:w-20 text-xl",
-  }[size];
-
-  if (logo && !imgError) {
-    return (
-      <img
-        src={logo}
-        alt={teamName}
-        onError={() => setImgError(true)}
-        className={`${sizeClasses} shrink-0 object-contain drop-shadow-sm`}
-        loading="lazy"
-      />
-    );
-  }
-
-  // Círculo bonito com as iniciais quando faltar imagem
-  return (
-    <div
-      className={`flex ${sizeClasses} shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${initialsInfo.gradient} font-black text-white shadow-md ring-1 ring-white/20 select-none`}
-    >
-      {initialsInfo.initials}
     </div>
   );
 }
