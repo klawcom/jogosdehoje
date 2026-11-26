@@ -86,3 +86,49 @@ export interface StandingsResponse {
   source: string;
   message?: string;
 }
+
+export interface PlayerStatLeader {
+  rank: number;
+  athleteId: string;
+  playerName: string;
+  shortName: string;
+  teamId: string;
+  teamName: string;
+  teamLogoUrl?: string;
+  value: number;
+  appearances?: number;
+  goals?: number;
+  assists?: number;
+}
+
+export interface TeamStatHighlight {
+  teamId: string;
+  teamName: string;
+  logoUrl?: string;
+  gamesPlayed: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  wins: number;
+  points: number;
+}
+
+export interface BrasileiraoStatsResponse {
+  success: boolean;
+  season: number;
+  seasonDisplayName: string;
+  lastUpdated: string;
+  source: string;
+  message?: string;
+  goalsLeaders: PlayerStatLeader[];
+  assistsLeaders: PlayerStatLeader[];
+  yellowCardsLeaders: PlayerStatLeader[];
+  redCardsLeaders: PlayerStatLeader[];
+  bestOffense: TeamStatHighlight[];
+  bestDefense: TeamStatHighlight[];
+  leagueTotals: {
+    totalGoals: number;
+    totalMatches: number;
+    goalsPerMatch: number;
+  };
+}

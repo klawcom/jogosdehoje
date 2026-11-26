@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Search,
   X,
@@ -8,6 +8,7 @@ import {
   RefreshCw,
   ShieldAlert,
   TrendingUp,
+  BarChart3,
 } from 'lucide-react';
 import { fetchBrasileiraoStandingsServerFn } from '../lib/server-fn';
 import { fetchBrasileiraoStandings } from '../lib/standings';
@@ -18,7 +19,7 @@ import { useFavorites } from '../lib/favorites';
 import { shareBrasileiraoStandingsOnWhatsApp } from '../lib/whatsapp';
 import { SiteHeader } from '../components/site-header';
 import { TeamBadge } from '../components/team-badge';
-import { WhatsAppIcon } from '../components/icons/whatsapp-icon';
+import { FloatingWhatsAppButton } from '../components/floating-whatsapp-button';
 
 export const Route = createFileRoute('/brasileirao')({
   component: BrasileiraoTabelaPage,
@@ -201,8 +202,6 @@ function BrasileiraoTabelaPage() {
         isDark={isDark}
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
-        onShareWhatsApp={handleShareWhatsApp}
-        shareTitle="Compartilhar classificação no WhatsApp"
       />
 
       <main className="relative z-10 mx-auto max-w-3xl px-3 sm:px-6 pt-3">
@@ -229,15 +228,24 @@ function BrasileiraoTabelaPage() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => syncStandings(true)}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/70 px-3 py-1.5 text-xs font-bold text-foreground hover:border-primary/50 transition cursor-pointer disabled:opacity-60"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 text-primary ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <Link
+                to="/estatisticas"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/70 px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+              >
+                <BarChart3 className="h-3.5 w-3.5 text-sky-500" />
+                <span>Estatísticas</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => syncStandings(true)}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background/70 px-3 py-1.5 text-xs font-bold text-foreground hover:border-primary/50 transition cursor-pointer disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-primary ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Atualizando...' : 'Atualizar'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick leader / G-4 / Z-4 highlights */}
@@ -620,17 +628,10 @@ function BrasileiraoTabelaPage() {
 
       {/* FLOATING WHATSAPP SHARE BUTTON */}
       {entries.length > 0 && (
-        <div className="fixed bottom-5 right-5 z-40">
-          <button
-            type="button"
-            onClick={handleShareWhatsApp}
-            className="group flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            title="Compartilhar classificação no WhatsApp"
-          >
-            <WhatsAppIcon className="h-4 w-4 fill-white" />
-            <span className="font-bold">Compartilhar</span>
-          </button>
-        </div>
+        <FloatingWhatsAppButton
+          onClick={handleShareWhatsApp}
+          title="Compartilhar classificação no WhatsApp"
+        />
       )}
     </div>
   );

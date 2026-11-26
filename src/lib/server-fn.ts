@@ -3,6 +3,7 @@ import { scrapeGoalMatches } from './scraper';
 import { saveMatchesToSupabase, recordSyncLog } from './supabase';
 import { getLiveScoresForMatches, enrichMatchesWithScores, LiveScoreData } from './live-scores';
 import { fetchBrasileiraoStandings } from './standings';
+import { fetchBrasileiraoStats } from './brasileirao-stats';
 import { MatchItem } from './types';
 
 export const fetchMatchesServerFn = createServerFn({ method: 'GET' }).handler(async () => {
@@ -73,6 +74,15 @@ export const fetchLiveScoresServerFn = createServerFn({ method: 'POST' }).handle
 export const fetchBrasileiraoStandingsServerFn = createServerFn({ method: 'GET' }).handler(
   async () => {
     return fetchBrasileiraoStandings();
+  }
+);
+
+/**
+ * Fetches live Brasileirão Série A player & team statistics for SSR and silent auto-sync
+ */
+export const fetchBrasileiraoStatsServerFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    return fetchBrasileiraoStats();
   }
 );
 

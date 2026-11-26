@@ -1,4 +1,4 @@
-import { MatchItem, StandingRow } from './types';
+import { MatchItem, StandingRow, BrasileiraoStatsResponse } from './types';
 
 /**
  * Formats match schedule text for WhatsApp or system sharing
@@ -96,6 +96,32 @@ export function shareBrasileiraoStandingsOnWhatsApp(
     `🟢 *G-6 (Libertadores):*\n${topSix.map(formatRow).join('\n')}\n\n` +
     `🔴 *Z-4 (Rebaixamento):*\n${zFour.map(formatRow).join('\n')}\n\n` +
     `📲 *Veja a tabela completa atualizada em tempo real:*\nhttps://jogosdehoje.lovable.app/brasileirao`;
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+}
+
+/**
+ * Shares a summary of Brasileirão Série A player & team stats on WhatsApp
+ */
+export function shareBrasileiraoStatsOnWhatsApp(stats: BrasileiraoStatsResponse) {
+  if (!stats || !stats.success) return;
+
+  const topScorers = stats.goalsLeaders
+    .slice(0, 5)
+    .map((p) => `${p.rank}º *${p.playerName}* (${p.teamName}) — ${p.value} gols`)
+    .join('\n');
+
+  const topAssists = stats.assistsLeaders
+    .slice(0, 5)
+    .map((p) => `${p.rank}º *${p.playerName}* (${p.teamName}) — ${p.value} assist.`)
+    .join('\n');
+
+  const text =
+    `📊 *BRASILEIRÃO SÉRIE A ${stats.season} — ESTATÍSTICAS* ⚽\n` +
+    `🕒 Atualizado às ${stats.lastUpdated} (Brasília)\n\n` +
+    `⚽ *Artilharia:*\n${topScorers}\n\n` +
+    `🎯 *Assistências:*\n${topAssists}\n\n` +
+    `📲 *Veja estatísticas completas em tempo real:*\nhttps://jogosdehoje.lovable.app/estatisticas`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
 }

@@ -30,6 +30,7 @@ import { getGoogleCalendarUrl } from "../lib/calendar";
 import { WhatsAppIcon } from "../components/icons/whatsapp-icon";
 import { SiteHeader } from "../components/site-header";
 import { TeamBadge } from "../components/team-badge";
+import { FloatingWhatsAppButton } from "../components/floating-whatsapp-button";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
@@ -414,8 +415,6 @@ function JogosDeHoje() {
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
         onOpenFavorites={() => setShowFavoritesModal(true)}
-        onShareWhatsApp={handleShareWhatsApp}
-        shareTitle="Compartilhar programação completa no WhatsApp"
       />
 
       {/* MAIN CONTAINER */}
@@ -705,17 +704,10 @@ function JogosDeHoje() {
       </main>
 
       {/* FLOATING ACTION BUTTON */}
-      <div className="fixed bottom-5 right-5 z-40">
-        <button
-          type="button"
-          onClick={handleShareWhatsApp}
-          className="group flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-bold text-white shadow-[0_4px_25px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          title="Compartilhar jogos no WhatsApp"
-        >
-          <WhatsAppIcon className="h-4 w-4 fill-white" />
-          <span className="font-bold">Compartilhar</span>
-        </button>
-      </div>
+      <FloatingWhatsAppButton
+        onClick={handleShareWhatsApp}
+        title="Compartilhar jogos no WhatsApp"
+      />
 
       {/* MATCH DETAILS FULL MODAL */}
       {activeMatch && (

@@ -1,9 +1,62 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
-import { RefreshCw, Star, Sun, Moon, Trophy, Calendar } from 'lucide-react';
-import { WhatsAppIcon } from './icons/whatsapp-icon';
+import {
+  RefreshCw,
+  Star,
+  Sun,
+  Moon,
+  Trophy,
+  Calendar,
+  BarChart3,
+  Menu,
+  X,
+  ChevronRight,
+} from 'lucide-react';
+
+export type ActiveSitePage = 'matches' | 'brasileirao' | 'estatisticas';
+
+interface NavPageItem {
+  id: ActiveSitePage;
+  to: '/' | '/brasileirao' | '/estatisticas';
+  label: string;
+  shortLabel: string;
+  description: string;
+  icon: typeof Calendar;
+  accentClass: string;
+}
+
+const NAV_PAGES: NavPageItem[] = [
+  {
+    id: 'matches',
+    to: '/',
+    label: 'Jogos de Hoje',
+    shortLabel: 'Jogos',
+    description: 'Horários de Brasília, canais de TV e placares ao vivo',
+    icon: Calendar,
+    accentClass: 'text-primary',
+  },
+  {
+    id: 'brasileirao',
+    to: '/brasileirao',
+    label: 'Tabela Brasileirão A',
+    shortLabel: 'Tabela A',
+    description: 'Classificação atualizada em tempo real (G-4 e Z-4)',
+    icon: Trophy,
+    accentClass: 'text-amber-500',
+  },
+  {
+    id: 'estatisticas',
+    to: '/estatisticas',
+    label: 'Estatísticas Série A',
+    shortLabel: 'Estatísticas',
+    description: 'Artilharia, assistências, cartões e melhores clubes',
+    icon: BarChart3,
+    accentClass: 'text-sky-500',
+  },
+];
 
 interface SiteHeaderProps {
-  activePage: 'matches' | 'brasileirao';
+  activePage: ActiveSitePage;
   lastUpdated: string;
   isRefreshing: boolean;
   onRefresh: () => void;
@@ -12,12 +65,10 @@ interface SiteHeaderProps {
   onToggleTheme: () => void;
   favoritesCount: number;
   onOpenFavorites?: () => void;
-  onShareWhatsApp: () => void;
-  shareTitle?: string;
 }
 
 /**
- * Shared sticky site header with navigation between Jogos de Hoje and Tabela Série A.
+ * Shared sticky site header with expandable navigation menu and quick page tabs.
  */
 export function SiteHeader({
   activePage,
@@ -29,9 +80,34 @@ export function SiteHeader({
   onToggleTheme,
   favoritesCount,
   onOpenFavorites,
-  onShareWhatsApp,
-  shareTitle = 'Compartilhar no WhatsApp',
 }: SiteHeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen]);
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/90 border-b border-border/80 px-4 pt-3 pb-2.5 sm:px-6">
       <div className="mx-auto max-w-3xl">
@@ -72,7 +148,7 @@ export function SiteHeader({
             </div>
           </Link>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0" ref={menuContainerRef}>
             <button
               type="button"
               onClick={onToggleTheme}
@@ -106,49 +182,113 @@ export function SiteHeader({
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={onShareWhatsApp}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-500 active:scale-95 transition cursor-pointer"
-              title={shareTitle}
-            >
-              <WhatsAppIcon className="h-4 w-4 fill-white" />
-              <span className="font-bold hidden xs:inline sm:inline">WhatsApp</span>
-            </button>
+            {/* Navigation Menu Button (replaces top-right WhatsApp button) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((prev) => !prev)}
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+                aria-label="Abrir menu de navegação"
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                  menuOpen
+                    ? 'border-primary bg-primary/15 text-primary shadow-sm'
+                    : 'border-border bg-card/80 text-foreground hover:border-primary/50 hover:bg-card'
+                }`}
+              >
+                {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                <span>Menu</span>
+              </button>
+
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl border border-border bg-card/98 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95"
+                >
+                  <div className="px-2.5 py-1.5 border-b border-border/60 mb-1.5 flex items-center justify-between">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                      Navegação do Site
+                    </span>
+                    <span className="text-[10px] font-semibold text-primary">
+                      {NAV_PAGES.length} páginas
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    {NAV_PAGES.map((page) => {
+                      const Icon = page.icon;
+                      const isActive = activePage === page.id;
+                      return (
+                        <Link
+                          key={page.id}
+                          to={page.to}
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                          className={`flex items-center gap-3 rounded-xl px-2.5 py-2.5 transition ${
+                            isActive
+                              ? 'bg-primary/15 border border-primary/30 text-foreground'
+                              : 'hover:bg-muted/60 text-foreground border border-transparent'
+                          }`}
+                        >
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
+                              isActive
+                                ? 'bg-primary/20 border-primary/40'
+                                : 'bg-background/70 border-border/70'
+                            }`}
+                          >
+                            <Icon className={`h-4 w-4 ${page.accentClass}`} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-extrabold truncate">{page.label}</p>
+                              {isActive && (
+                                <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[9px] font-black uppercase text-primary">
+                                  Atual
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {page.description}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Quick Navigation Tabs */}
         <nav
-          aria-label="Navegação principal"
-          className="mt-2.5 flex items-center gap-1.5 rounded-xl bg-muted/50 p-1 border border-border/60"
+          aria-label="Navegação rápida"
+          className="mt-2.5 flex items-center gap-1 rounded-xl bg-muted/50 p-1 border border-border/60"
         >
-          <Link
-            to="/"
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-              activePage === 'matches'
-                ? 'bg-card text-foreground shadow-sm border border-border/80'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Calendar className={`h-3.5 w-3.5 ${activePage === 'matches' ? 'text-primary' : ''}`} />
-            <span>Jogos de Hoje</span>
-          </Link>
-
-          <Link
-            to="/brasileirao"
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-              activePage === 'brasileirao'
-                ? 'bg-card text-foreground shadow-sm border border-border/80'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Trophy className={`h-3.5 w-3.5 ${activePage === 'brasileirao' ? 'text-amber-500' : ''}`} />
-            <span>Tabela Brasileirão A</span>
-          </Link>
+          {NAV_PAGES.map((page) => {
+            const Icon = page.icon;
+            const isActive = activePage === page.id;
+            return (
+              <Link
+                key={page.id}
+                to={page.to}
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition whitespace-nowrap ${
+                  isActive
+                    ? 'bg-card text-foreground shadow-sm border border-border/80'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? page.accentClass : ''}`} />
+                <span className="sm:hidden">{page.shortLabel}</span>
+                <span className="hidden sm:inline">{page.label}</span>
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </header>
   );
 }
-

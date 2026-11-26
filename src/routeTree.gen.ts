@@ -9,9 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EstatisticasRouteImport } from './routes/estatisticas'
 import { Route as BrasileiraoRouteImport } from './routes/brasileirao'
 import { Route as IndexRouteImport } from './routes/index'
 
+const EstatisticasRoute = EstatisticasRouteImport.update({
+  id: '/estatisticas',
+  path: '/estatisticas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrasileiraoRoute = BrasileiraoRouteImport.update({
   id: '/brasileirao',
   path: '/brasileirao',
@@ -26,31 +32,42 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/brasileirao': typeof BrasileiraoRoute
+  '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/brasileirao': typeof BrasileiraoRoute
+  '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/brasileirao': typeof BrasileiraoRoute
+  '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/brasileirao'
+  fullPaths: '/' | '/brasileirao' | '/estatisticas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/brasileirao'
-  id: '__root__' | '/' | '/brasileirao'
+  to: '/' | '/brasileirao' | '/estatisticas'
+  id: '__root__' | '/' | '/brasileirao' | '/estatisticas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrasileiraoRoute: typeof BrasileiraoRoute
+  EstatisticasRoute: typeof EstatisticasRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/estatisticas': {
+      id: '/estatisticas'
+      path: '/estatisticas'
+      fullPath: '/estatisticas'
+      preLoaderRoute: typeof EstatisticasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brasileirao': {
       id: '/brasileirao'
       path: '/brasileirao'
@@ -71,6 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrasileiraoRoute: BrasileiraoRoute,
+  EstatisticasRoute: EstatisticasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
