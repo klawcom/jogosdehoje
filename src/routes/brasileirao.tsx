@@ -46,7 +46,7 @@ type StatCategoryTab = 'goals' | 'assists' | 'yellow' | 'red' | 'clubs';
 export const Route = createFileRoute('/brasileirao')({
   component: BrasileiraoTabelaPage,
   validateSearch: (search: Record<string, unknown>): { tab?: MobileSectionTab } => {
-    const raw = search?.tab;
+    const raw = search['tab'];
     if (raw === 'estatisticas' || raw === 'classificacao') {
       return { tab: raw };
     }
@@ -87,6 +87,10 @@ export const Route = createFileRoute('/brasileirao')({
         content:
           'Confira a tabela de classificação e estatísticas completas do Brasileirão Série A atualizadas automaticamente: pontos, G-4, Z-4, artilharia, assistências, cartões e melhores ataques e defesas.',
       },
+      { property: 'og:title', content: 'Brasileirão Série A — Classificação e Estatísticas Atualizadas | Jogos de Hoje' },
+      { property: 'og:description', content: 'Classificação, artilharia, assistências e estatísticas atualizadas do Brasileirão Série A.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary_large_image' },
     ],
   }),
 });
@@ -368,7 +372,8 @@ function BrasileiraoTabelaPage() {
     },
   ];
 
-  const currentStatTabMeta = statTabsMeta.find((t) => t.id === statTab)!;
+  const currentStatTabMeta = statTabsMeta.find((t) => t.id === statTab);
+  if (!currentStatTabMeta) return null;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">

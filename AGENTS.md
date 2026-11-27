@@ -21,3 +21,7 @@ A sincronização entre a pasta local (`c:\jogosdehoje`), o GitHub (`origin/main
    - Verificar o estado com `git status` e `git diff`.
    - Caso haja alterações locais, executar `git add .`, criar um commit semântico e claro em português (`git commit -m "..."`) e sincronizar com `git pull --rebase origin main` (se necessário) seguido de `git push origin main` automaticamente.
    - Como o repositório do GitHub está integrado ao Lovable, o `git push origin main` mantém a pasta local, o GitHub e o site publicado no Lovable sempre sincronizados.
+
+## Route architecture
+
+- Keep standings and player/team statistics together in `/brasileirao`, preserving `/estatisticas` as a redirect with `tab=estatisticas` so existing shared links remain usable.

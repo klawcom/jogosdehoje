@@ -84,6 +84,10 @@ export const Route = createFileRoute("/")({
         content:
           "Confira todos os jogos de futebol de hoje por horário de Brasília, com canais de TV aberta, TV fechada e streaming.",
       },
+      { property: 'og:title', content: 'Jogos de Hoje — Futebol na TV, Horários e Onde Assistir' },
+      { property: 'og:description', content: 'Confira jogos, horários de Brasília e canais de transmissão.' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary_large_image' },
     ],
   }),
 });
@@ -362,7 +366,7 @@ function JogosDeHoje() {
       if (!timeMap.has(timeKey)) {
         timeMap.set(timeKey, []);
       }
-      timeMap.get(timeKey)!.push(match);
+      timeMap.get(timeKey)?.push(match);
     }
 
     const groups: { time: string; matches: MatchItem[] }[] = [];
