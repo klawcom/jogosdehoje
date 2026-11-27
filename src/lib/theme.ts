@@ -38,7 +38,9 @@ export function applyThemeToDocument(theme: Theme) {
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  // Match SSR initial state ('dark') during hydration; the inline <head> script
+  // already sets the visual class before paint, and useEffect syncs React state.
+  const [theme, setThemeState] = useState<Theme>('dark');
 
   useEffect(() => {
     // Initial sync
