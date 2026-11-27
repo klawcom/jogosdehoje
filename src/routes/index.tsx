@@ -31,6 +31,7 @@ import { WhatsAppIcon } from "../components/icons/whatsapp-icon";
 import { SiteHeader } from "../components/site-header";
 import { TeamBadge } from "../components/team-badge";
 import { FloatingWhatsAppButton } from "../components/floating-whatsapp-button";
+import { FavoritesModal } from "../components/favorites-modal";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
@@ -39,6 +40,13 @@ import { enrichMatchesWithScores } from "../lib/live-scores";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
+  validateSearch: (search: Record<string, unknown>): { date?: string } => {
+    const raw = search["date"];
+    if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return { date: raw };
+    }
+    return {};
+  },
   loader: async () => {
     try {
       const data = await fetchMatchesServerFn();
@@ -92,32 +100,6 @@ export const Route = createFileRoute("/")({
   }),
 });
 
-const POPULAR_TEAMS = [
-  "Flamengo",
-  "Grêmio",
-  "Palmeiras",
-  "Corinthians",
-  "São Paulo",
-  "Vasco",
-  "Fluminense",
-  "Botafogo",
-  "Internacional",
-  "Cruzeiro",
-  "Atlético-MG",
-  "Santos",
-  "Coritiba",
-  "América-MG",
-  "Cuiabá",
-  "Juventude",
-  "Náutico",
-  "Real Madrid",
-  "Barcelona",
-  "Boca Juniors",
-  "River Plate",
-  "Estudiantes",
-  "Union Santa Fe",
-];
-
 // Temas de cores que diferenciam as sequências de horários seguindo a paleta do site
 interface TimeSlotTheme {
   name: string;
@@ -137,85 +119,85 @@ interface TimeSlotTheme {
 
 function getTimeSlotTheme(slotIndex: number): TimeSlotTheme {
   const themes: TimeSlotTheme[] = [
-    // 1. Esmeralda / Verde (Padrão Principal)
+    // 1. Esmeralda / Verde Estádio
     {
       name: "emerald",
-      badgeBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
-      badgeText: "text-emerald-700 dark:text-emerald-400",
-      badgeBorder: "border-emerald-500/25 dark:border-emerald-500/30",
-      iconBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
-      iconText: "text-emerald-700 dark:text-emerald-400",
-      cardBorder: "border-emerald-200 dark:border-emerald-500/25",
-      cardHover: "hover:border-emerald-400 dark:hover:border-emerald-400/60",
-      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]",
-      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
-      timeBadgeBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
+      badgeBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
+      badgeText: "text-emerald-700 dark:text-emerald-300",
+      badgeBorder: "border-emerald-500/35 dark:border-emerald-500/45",
+      iconBg: "bg-emerald-500 text-white",
+      iconText: "text-white",
+      cardBorder: "border-emerald-300/80 dark:border-emerald-500/35",
+      cardHover: "hover:border-emerald-500 dark:hover:border-emerald-400",
+      cardGlow: "shadow-sm hover:shadow-lg dark:hover:shadow-[0_0_24px_rgba(16,185,129,0.22)]",
+      cardBgGradient: "bg-card/95 dark:bg-card/90",
+      timeBadgeBg: "bg-emerald-500/15 dark:bg-emerald-500/20",
       timeBadgeText: "text-emerald-800 dark:text-emerald-300",
-      timeBadgeBorder: "border-emerald-500/30 dark:border-emerald-500/40",
+      timeBadgeBorder: "border-emerald-500/35 dark:border-emerald-500/45",
     },
-    // 2. Azul Céu (Padrão TV Fechada)
+    // 2. Azul Elétrico / TV Fechada
     {
       name: "sky",
-      badgeBg: "bg-sky-500/10 dark:bg-sky-500/15",
-      badgeText: "text-sky-700 dark:text-sky-400",
-      badgeBorder: "border-sky-500/25 dark:border-sky-500/30",
-      iconBg: "bg-sky-500/15 dark:bg-sky-500/20",
-      iconText: "text-sky-700 dark:text-sky-400",
-      cardBorder: "border-sky-200 dark:border-sky-500/25",
-      cardHover: "hover:border-sky-400 dark:hover:border-sky-400/60",
-      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(14,165,233,0.12)]",
-      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
-      timeBadgeBg: "bg-sky-500/10 dark:bg-sky-500/15",
+      badgeBg: "bg-sky-500/15 dark:bg-sky-500/20",
+      badgeText: "text-sky-700 dark:text-sky-300",
+      badgeBorder: "border-sky-500/35 dark:border-sky-500/45",
+      iconBg: "bg-sky-500 text-white",
+      iconText: "text-white",
+      cardBorder: "border-sky-300/80 dark:border-sky-500/35",
+      cardHover: "hover:border-sky-500 dark:hover:border-sky-400",
+      cardGlow: "shadow-sm hover:shadow-lg dark:hover:shadow-[0_0_24px_rgba(14,165,233,0.22)]",
+      cardBgGradient: "bg-card/95 dark:bg-card/90",
+      timeBadgeBg: "bg-sky-500/15 dark:bg-sky-500/20",
       timeBadgeText: "text-sky-800 dark:text-sky-300",
-      timeBadgeBorder: "border-sky-500/30 dark:border-sky-500/40",
+      timeBadgeBorder: "border-sky-500/35 dark:border-sky-500/45",
     },
-    // 3. Roxo / Violeta (Padrão Streaming)
+    // 3. Violeta Vibrante / Streaming
     {
       name: "violet",
-      badgeBg: "bg-violet-500/10 dark:bg-violet-500/15",
-      badgeText: "text-violet-700 dark:text-violet-400",
-      badgeBorder: "border-violet-500/25 dark:border-violet-500/30",
-      iconBg: "bg-violet-500/15 dark:bg-violet-500/20",
-      iconText: "text-violet-700 dark:text-violet-400",
-      cardBorder: "border-violet-200 dark:border-violet-500/25",
-      cardHover: "hover:border-violet-400 dark:hover:border-violet-400/60",
-      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(168,85,247,0.12)]",
-      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
-      timeBadgeBg: "bg-violet-500/10 dark:bg-violet-500/15",
+      badgeBg: "bg-violet-500/15 dark:bg-violet-500/20",
+      badgeText: "text-violet-700 dark:text-violet-300",
+      badgeBorder: "border-violet-500/35 dark:border-violet-500/45",
+      iconBg: "bg-violet-500 text-white",
+      iconText: "text-white",
+      cardBorder: "border-violet-300/80 dark:border-violet-500/35",
+      cardHover: "hover:border-violet-500 dark:hover:border-violet-400",
+      cardGlow: "shadow-sm hover:shadow-lg dark:hover:shadow-[0_0_24px_rgba(168,85,247,0.22)]",
+      cardBgGradient: "bg-card/95 dark:bg-card/90",
+      timeBadgeBg: "bg-violet-500/15 dark:bg-violet-500/20",
       timeBadgeText: "text-violet-800 dark:text-violet-300",
-      timeBadgeBorder: "border-violet-500/30 dark:border-violet-500/40",
+      timeBadgeBorder: "border-violet-500/35 dark:border-violet-500/45",
     },
-    // 4. Dourado / Âmbar (Padrão Destaques & Favoritos)
+    // 4. Âmbar / Ouro Destaques
     {
       name: "amber",
-      badgeBg: "bg-amber-500/10 dark:bg-amber-500/15",
-      badgeText: "text-amber-700 dark:text-amber-400",
-      badgeBorder: "border-amber-500/25 dark:border-amber-500/30",
-      iconBg: "bg-amber-500/15 dark:bg-amber-500/20",
-      iconText: "text-amber-700 dark:text-amber-400",
-      cardBorder: "border-amber-200 dark:border-amber-500/25",
-      cardHover: "hover:border-amber-400 dark:hover:border-amber-400/60",
-      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(245,158,11,0.12)]",
-      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
-      timeBadgeBg: "bg-amber-500/10 dark:bg-amber-500/15",
+      badgeBg: "bg-amber-500/15 dark:bg-amber-500/20",
+      badgeText: "text-amber-700 dark:text-amber-300",
+      badgeBorder: "border-amber-500/35 dark:border-amber-500/45",
+      iconBg: "bg-amber-500 text-amber-950",
+      iconText: "text-amber-950",
+      cardBorder: "border-amber-300/80 dark:border-amber-500/35",
+      cardHover: "hover:border-amber-500 dark:hover:border-amber-400",
+      cardGlow: "shadow-sm hover:shadow-lg dark:hover:shadow-[0_0_24px_rgba(245,158,11,0.22)]",
+      cardBgGradient: "bg-card/95 dark:bg-card/90",
+      timeBadgeBg: "bg-amber-500/15 dark:bg-amber-500/20",
       timeBadgeText: "text-amber-800 dark:text-amber-300",
-      timeBadgeBorder: "border-amber-500/30 dark:border-amber-500/40",
+      timeBadgeBorder: "border-amber-500/35 dark:border-amber-500/45",
     },
-    // 5. Turquesa / Teal (Padrão Especial)
+    // 5. Turquesa / Teal
     {
       name: "teal",
-      badgeBg: "bg-teal-500/10 dark:bg-teal-500/15",
-      badgeText: "text-teal-700 dark:text-teal-400",
-      badgeBorder: "border-teal-500/25 dark:border-teal-500/30",
-      iconBg: "bg-teal-500/15 dark:bg-teal-500/20",
-      iconText: "text-teal-700 dark:text-teal-400",
-      cardBorder: "border-teal-200 dark:border-teal-500/25",
-      cardHover: "hover:border-teal-400 dark:hover:border-teal-400/60",
-      cardGlow: "hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(20,184,166,0.12)]",
-      cardBgGradient: "bg-card dark:bg-gradient-to-b dark:from-card/90 dark:to-card/75",
-      timeBadgeBg: "bg-teal-500/10 dark:bg-teal-500/15",
+      badgeBg: "bg-teal-500/15 dark:bg-teal-500/20",
+      badgeText: "text-teal-700 dark:text-teal-300",
+      badgeBorder: "border-teal-500/35 dark:border-teal-500/45",
+      iconBg: "bg-teal-500 text-white",
+      iconText: "text-white",
+      cardBorder: "border-teal-300/80 dark:border-teal-500/35",
+      cardHover: "hover:border-teal-500 dark:hover:border-teal-400",
+      cardGlow: "shadow-sm hover:shadow-lg dark:hover:shadow-[0_0_24px_rgba(20,184,166,0.22)]",
+      cardBgGradient: "bg-card/95 dark:bg-card/90",
+      timeBadgeBg: "bg-teal-500/15 dark:bg-teal-500/20",
       timeBadgeText: "text-teal-800 dark:text-teal-300",
-      timeBadgeBorder: "border-teal-500/30 dark:border-teal-500/40",
+      timeBadgeBorder: "border-teal-500/35 dark:border-teal-500/45",
     },
   ];
 
@@ -224,6 +206,7 @@ function getTimeSlotTheme(slotIndex: number): TimeSlotTheme {
 
 function JogosDeHoje() {
   const loaderData = Route.useLoaderData();
+  const searchParams = Route.useSearch();
 
   const [days, setDays] = useState<DaySchedule[]>(loaderData?.days || []);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number>(0);
@@ -234,23 +217,35 @@ function JogosDeHoje() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChampionship, setSelectedChampionship] = useState<string>("all");
   const [selectedChannelType, setSelectedChannelType] = useState<ChannelType | "all">("all");
+  const [onlyLive, setOnlyLive] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
 
   // Active match for details modal/page
   const [activeMatch, setActiveMatch] = useState<MatchItem | null>(null);
 
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const { favorites, toggleFavorite, isFavorite, matchHasFavorite } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
 
   useEffect(() => {
-    if (days && days.length > 0) {
-      const todayIdx = days.findIndex((d) => d.isToday);
-      if (todayIdx >= 0) {
-        setSelectedDayIndex(todayIdx);
+    if (!days || days.length === 0) return;
+    if (searchParams?.date) {
+      const targetIdx = days.findIndex((d) => d.date === searchParams.date);
+      if (targetIdx >= 0) {
+        setSelectedDayIndex(targetIdx);
+        return;
       }
     }
-  }, [days]);
+    const todayIdx = days.findIndex((d) => d.isToday);
+    if (todayIdx >= 0) {
+      setSelectedDayIndex(todayIdx);
+    }
+  }, [days, searchParams?.date]);
+
+  const selectDateByStr = (dateStr: string) => {
+    const idx = days.findIndex((d) => d.date === dateStr);
+    if (idx >= 0) setSelectedDayIndex(idx);
+  };
 
   // Silent background auto-update for live scores and status without page reload
   useEffect(() => {
@@ -324,10 +319,19 @@ function JogosDeHoje() {
     return Array.from(set).sort();
   }, [currentDay]);
 
+  const liveMatchesCount = useMemo(() => {
+    if (!currentDay) return 0;
+    return currentDay.matches.filter((m) => getMatchStatus(m).isLive).length;
+  }, [currentDay]);
+
   const filteredMatches = useMemo(() => {
     if (!currentDay) return [];
 
     return currentDay.matches.filter((match) => {
+      if (onlyLive && !getMatchStatus(match).isLive) {
+        return false;
+      }
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchesTitle = match.match_title.toLowerCase().includes(q);
@@ -350,7 +354,7 @@ function JogosDeHoje() {
 
       return true;
     });
-  }, [currentDay, searchQuery, selectedChampionship, selectedChannelType]);
+  }, [currentDay, onlyLive, searchQuery, selectedChampionship, selectedChannelType]);
 
   const favoriteMatches = useMemo(() => {
     return filteredMatches.filter((m) => matchHasFavorite(m));
@@ -395,21 +399,20 @@ function JogosDeHoje() {
   };
 
   const hasActiveFilters =
+    onlyLive ||
     searchQuery.trim() !== "" ||
     selectedChampionship !== "all" ||
     selectedChannelType !== "all";
 
   const clearFilters = () => {
+    setOnlyLive(false);
     setSearchQuery("");
     setSelectedChampionship("all");
     setSelectedChannelType("all");
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
-      {/* Top ambient glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-64 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
-
+    <div className="min-h-screen text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
       {/* HEADER: Jogos de Hoje */}
       <SiteHeader
         activePage="matches"
@@ -421,6 +424,9 @@ function JogosDeHoje() {
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
         onOpenFavorites={() => setShowFavoritesModal(true)}
+        days={days}
+        selectedDate={currentDay?.date}
+        onSelectDate={selectDateByStr}
       />
 
       {/* MAIN CONTAINER */}
@@ -428,13 +434,13 @@ function JogosDeHoje() {
         {/* DESKTOP CONTROL DASHBOARD: Date Selector + Search & Channel Filters */}
         <div className="mb-4 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 items-stretch">
           {/* DATE SELECTOR BAR */}
-          <section className="lg:col-span-5 flex flex-col justify-between rounded-2xl border border-border bg-card/85 p-3 sm:p-3.5 backdrop-blur-md shadow-sm">
+          <section className="lg:col-span-5 flex flex-col justify-between rounded-2xl border border-border bg-card/95 p-3 sm:p-3.5 backdrop-blur-md shadow-md">
             <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={handlePrevDay}
                 disabled={!canGoPrev}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/70 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                 title="Dia anterior"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -443,24 +449,46 @@ function JogosDeHoje() {
               <div className="text-center min-w-0 flex-1">
                 <div className="inline-flex items-center gap-1.5">
                   {currentDay?.isToday && (
-                    <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary tracking-wide uppercase">
+                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-black text-primary-foreground tracking-wide uppercase shadow-sm">
                       HOJE
+                    </span>
+                  )}
+                  {currentDay?.isTomorrow && (
+                    <span className="rounded-full bg-sky-500 px-2 py-0.5 text-[10px] font-black text-white tracking-wide uppercase shadow-sm">
+                      AMANHÃ
                     </span>
                   )}
                   <h2 className="text-sm sm:text-base font-extrabold text-foreground truncate">
                     {currentDay?.displayDate || "Jogos de Hoje"}
                   </h2>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {filteredMatches.length} {filteredMatches.length === 1 ? "jogo encontrado" : "jogos encontrados"}
-                </p>
+                <div className="mt-0.5 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
+                  <span>
+                    {filteredMatches.length}{" "}
+                    {filteredMatches.length === 1 ? "jogo encontrado" : "jogos encontrados"}
+                  </span>
+                  {liveMatchesCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setOnlyLive((prev) => !prev)}
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black border transition cursor-pointer ${
+                        onlyLive
+                          ? "bg-rose-500 text-white border-rose-500 shadow-sm"
+                          : "bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25"
+                      }`}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-ping" />
+                      {liveMatchesCount} ao vivo
+                    </button>
+                  )}
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={handleNextDay}
                 disabled={!canGoNext}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/70 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                 title="Próximo dia"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -469,9 +497,14 @@ function JogosDeHoje() {
 
             {/* Quick Date Pills */}
             {days.length > 1 && (
-              <div className="mt-2.5 flex items-center justify-center gap-1.5 overflow-x-auto pt-2.5 border-t border-border/50 no-scrollbar">
+              <div className="mt-2.5 flex items-center justify-center gap-1.5 overflow-x-auto pt-2.5 border-t border-border/60 no-scrollbar">
                 {days.map((d, idx) => {
                   const isActive = idx === selectedDayIndex;
+                  const pillLabel = d.isToday
+                    ? "Hoje"
+                    : d.isTomorrow
+                    ? "Amanhã"
+                    : d.dayOfWeek;
                   return (
                     <button
                       key={d.date}
@@ -479,11 +512,11 @@ function JogosDeHoje() {
                       onClick={() => setSelectedDayIndex(idx)}
                       className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                         isActive
-                          ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-                          : "bg-background/50 text-muted-foreground hover:text-foreground hover:bg-background border border-border/50"
+                          ? "bg-primary text-primary-foreground shadow-[0_0_14px_rgba(16,185,129,0.4)]"
+                          : "bg-background/70 text-muted-foreground hover:text-foreground hover:bg-background border border-border/70"
                       }`}
                     >
-                      {d.isToday ? "Hoje" : d.dayOfWeek} ({d.shortDate})
+                      {pillLabel} ({d.shortDate})
                     </button>
                   );
                 })}
@@ -492,7 +525,7 @@ function JogosDeHoje() {
           </section>
 
           {/* SEARCH & CHANNEL FILTERS */}
-          <section className="lg:col-span-7 flex flex-col justify-between gap-2.5 rounded-2xl border border-border bg-card/85 p-3 sm:p-3.5 backdrop-blur-md shadow-sm">
+          <section className="lg:col-span-7 flex flex-col justify-between gap-2.5 rounded-2xl border border-border bg-card/95 p-3 sm:p-3.5 backdrop-blur-md shadow-md">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input
@@ -580,7 +613,7 @@ function JogosDeHoje() {
 
         {/* CHAMPIONSHIP FILTER STRIP (wraps neatly on desktop, smooth scroll on mobile) */}
         {availableChampionships.length > 1 && (
-          <section className="mb-5 rounded-2xl border border-border/70 bg-card/60 px-3 py-2.5 backdrop-blur-sm">
+          <section className="mb-5 rounded-2xl border border-border bg-card/90 px-3 py-2.5 backdrop-blur-md shadow-sm">
             <div className="flex items-center gap-1.5 overflow-x-auto lg:flex-wrap no-scrollbar">
               <span className="text-[11px] font-semibold text-muted-foreground shrink-0 flex items-center gap-1 mr-1">
                 <Trophy className="h-3.5 w-3.5 text-amber-500" /> Campeonato:
@@ -619,7 +652,7 @@ function JogosDeHoje() {
 
         {/* PINNED FAVORITE TEAMS */}
         {favoriteMatches.length > 0 && (
-          <section className="mb-6 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-card/80 to-card/90 p-3.5 sm:p-4 shadow-[0_0_25px_rgba(245,158,11,0.12)]">
+          <section className="mb-6 rounded-2xl border-2 border-amber-500/60 bg-card/95 p-3.5 sm:p-4 shadow-[0_0_28px_rgba(245,158,11,0.18)] backdrop-blur-md">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400 text-amber-950 font-bold shadow-sm">
@@ -734,87 +767,13 @@ function JogosDeHoje() {
       )}
 
       {/* FAVORITE TEAMS MODAL */}
-      {showFavoritesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-border/80 pb-3">
-              <div className="flex items-center gap-2">
-                <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-                <h3 className="font-extrabold text-base text-foreground">Meus Times Favoritos</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowFavoritesModal(false)}
-                className="text-muted-foreground hover:text-foreground p-1 rounded-lg"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mt-3">
-              <p className="text-xs text-muted-foreground mb-3">
-                Selecione seus times para que os jogos apareçam em destaque no topo:
-              </p>
-
-              <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto p-1">
-                {POPULAR_TEAMS.map((team) => {
-                  const active = isFavorite(team);
-                  return (
-                    <button
-                      key={team}
-                      type="button"
-                      onClick={() => toggleFavorite(team)}
-                      className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition ${
-                        active
-                          ? "bg-amber-400 text-amber-950 shadow-md ring-2 ring-amber-300"
-                          : "bg-background/80 text-foreground border border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <TeamBadge teamName={team} size="sm" />
-                      <span>{team}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {favorites.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-border/60">
-                  <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
-                    Times selecionados ({favorites.length}):
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {favorites.map((f) => (
-                      <span
-                        key={f}
-                        className="inline-flex items-center gap-1 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 text-[11px] font-medium"
-                      >
-                        {f}
-                        <button
-                          type="button"
-                          onClick={() => toggleFavorite(f)}
-                          className="hover:text-white"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowFavoritesModal(false)}
-                className="w-full rounded-xl bg-primary py-2.5 text-center text-xs font-extrabold text-primary-foreground shadow hover:bg-emerald-400 transition"
-              >
-                Concluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FavoritesModal
+        isOpen={showFavoritesModal}
+        onClose={() => setShowFavoritesModal(false)}
+        favorites={favorites}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+      />
     </div>
   );
 }
@@ -846,10 +805,10 @@ function CompactMatchCard({
       onClick={onOpenDetails}
       className={`group relative flex flex-col justify-between rounded-xl border p-3 cursor-pointer transition-all active:scale-[0.99] hover:scale-[1.01] ${
         highlightFavorite
-          ? "border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-card/90 to-card shadow-[0_0_15px_rgba(245,158,11,0.08)]"
+          ? "border-amber-500/60 bg-card/95 shadow-[0_0_20px_rgba(245,158,11,0.16)]"
           : status.isFinished
-          ? "border-border/40 bg-card/45 opacity-70 hover:opacity-100 transition-opacity"
-          : `${theme.cardBorder} ${theme.cardBgGradient} backdrop-blur-sm ${theme.cardHover} ${theme.cardGlow}`
+          ? "border-border/70 bg-card/80 opacity-85 hover:opacity-100 transition-opacity"
+          : `${theme.cardBorder} ${theme.cardBgGradient} backdrop-blur-md ${theme.cardHover} ${theme.cardGlow}`
       }`}
     >
       {/* Top row: Championship + Status do Jogo (Ao vivo / Em breve / Encerrado) */}

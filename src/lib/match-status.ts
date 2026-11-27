@@ -54,9 +54,9 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       hasScore,
       scoreText,
       badgeStyle: {
-        bg: 'bg-rose-500/20',
-        text: 'text-rose-400',
-        border: 'border-rose-500/50',
+        bg: 'bg-rose-500/15 dark:bg-rose-500/25',
+        text: 'text-rose-700 dark:text-rose-300',
+        border: 'border-rose-500/40 dark:border-rose-500/60',
         pulse: true,
       },
     };
@@ -93,9 +93,9 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       hasScore,
       scoreText,
       badgeStyle: {
-        bg: 'bg-slate-800/40',
-        text: 'text-slate-300',
-        border: 'border-slate-700/50',
+        bg: 'bg-sky-500/12 dark:bg-sky-500/15',
+        text: 'text-sky-700 dark:text-sky-300',
+        border: 'border-sky-500/35 dark:border-sky-500/40',
       },
     };
   }
@@ -119,9 +119,9 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       hasScore,
       scoreText,
       badgeStyle: {
-        bg: 'bg-emerald-500/10',
-        text: 'text-emerald-400',
-        border: 'border-emerald-500/30',
+        bg: 'bg-emerald-500/15 dark:bg-emerald-500/20',
+        text: 'text-emerald-700 dark:text-emerald-300',
+        border: 'border-emerald-500/35 dark:border-emerald-500/45',
       },
     };
   }
@@ -148,9 +148,9 @@ export function getMatchStatus(match: MatchItem): MatchStatusInfo {
       hasScore,
       scoreText,
       badgeStyle: {
-        bg: 'bg-rose-500/20',
-        text: 'text-rose-400',
-        border: 'border-rose-500/50',
+        bg: 'bg-rose-500/15 dark:bg-rose-500/25',
+        text: 'text-rose-700 dark:text-rose-300',
+        border: 'border-rose-500/40 dark:border-rose-500/60',
         pulse: true,
       },
     };

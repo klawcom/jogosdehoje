@@ -39,6 +39,7 @@ import {
 import { SiteHeader } from '../components/site-header';
 import { TeamBadge } from '../components/team-badge';
 import { FloatingWhatsAppButton } from '../components/floating-whatsapp-button';
+import { FavoritesModal } from '../components/favorites-modal';
 
 type MobileSectionTab = 'classificacao' | 'estatisticas';
 type StatCategoryTab = 'goals' | 'assists' | 'yellow' | 'red' | 'clubs';
@@ -168,6 +169,7 @@ function BrasileiraoTabelaPage() {
   const [statTab, setStatTab] = useState<StatCategoryTab>('goals');
   const [statQuery, setStatQuery] = useState('');
   const [showAllStats, setShowAllStats] = useState(false);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
@@ -376,10 +378,7 @@ function BrasileiraoTabelaPage() {
   if (!currentStatTabMeta) return null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
-      {/* Top ambient glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-64 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
-
+    <div className="min-h-screen text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
       <SiteHeader
         activePage="brasileirao"
         lastUpdated={lastUpdated}
@@ -389,11 +388,12 @@ function BrasileiraoTabelaPage() {
         isDark={isDark}
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
+        onOpenFavorites={() => setShowFavoritesModal(true)}
       />
 
       <main className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-5">
         {/* HERO SUMMARY CARD */}
-        <section className="mb-4 rounded-2xl border border-border bg-card/85 p-3.5 sm:p-5 backdrop-blur-md shadow-sm">
+        <section className="mb-4 rounded-2xl border border-border bg-card/95 p-3.5 sm:p-5 backdrop-blur-md shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30">
@@ -570,7 +570,7 @@ function BrasileiraoTabelaPage() {
             }`}
           >
             {/* Search & Zone Filters */}
-            <div className="space-y-2 rounded-2xl border border-border bg-card/80 p-3 backdrop-blur-md shadow-sm">
+            <div className="space-y-2 rounded-2xl border border-border bg-card/95 p-3 backdrop-blur-md shadow-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
@@ -683,7 +683,7 @@ function BrasileiraoTabelaPage() {
                 </button>
               </div>
             ) : (
-              <section className="rounded-2xl border border-border bg-card/90 shadow-sm overflow-hidden backdrop-blur-md">
+              <section className="rounded-2xl border border-border bg-card/95 shadow-md overflow-hidden backdrop-blur-md">
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-left text-xs sm:text-[13px]">
                     <thead>
@@ -900,7 +900,7 @@ function BrasileiraoTabelaPage() {
             }`}
           >
             {/* Stats Header & Quick Highlights */}
-            <section className="rounded-2xl border border-border bg-card/85 p-3 sm:p-3.5 backdrop-blur-md shadow-sm space-y-2.5">
+            <section className="rounded-2xl border border-border bg-card/95 p-3 sm:p-3.5 backdrop-blur-md shadow-md space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-500 border border-sky-500/30">
@@ -1309,6 +1309,14 @@ function BrasileiraoTabelaPage() {
           }
         />
       )}
+
+      <FavoritesModal
+        isOpen={showFavoritesModal}
+        onClose={() => setShowFavoritesModal(false)}
+        favorites={favorites}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+      />
     </div>
   );
 }

@@ -30,7 +30,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#0f1520" },
+      { name: "theme-color", content: "#061c12" },
       { title: "Jogos de Hoje — Futebol na TV e Streaming" },
       { name: "description", content: "Confira todos os jogos de futebol de hoje com horários de Brasília e onde assistir na TV aberta, TV fechada e streaming." },
       { property: "og:title", content: "Jogos de Hoje — Futebol na TV e Streaming" },
@@ -94,8 +94,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
         />
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-background font-['Plus_Jakarta_Sans',sans-serif] text-foreground antialiased selection:bg-primary/20 selection:text-primary">
-        {children}
+      <body className="min-h-screen font-['Plus_Jakarta_Sans',sans-serif] text-foreground antialiased selection:bg-primary/20 selection:text-primary">
+        <div className="pitch-field-lines" aria-hidden="true" />
+        <div className="relative z-10">{children}</div>
         <Scripts />
       </body>
     </html>

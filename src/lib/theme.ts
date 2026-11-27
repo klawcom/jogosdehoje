@@ -33,7 +33,7 @@ export function applyThemeToDocument(theme: Theme) {
   // Update mobile browser status bar color
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', theme === 'dark' ? '#0f1520' : '#f8fafc');
+    metaTheme.setAttribute('content', theme === 'dark' ? '#061c12' : '#dff5e7');
   }
 }
 

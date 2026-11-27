@@ -36,63 +36,80 @@
 :root {
   --radius: 0.875rem;
 
-  /* Light Mode Tokens (Clean, crisp, high contrast) */
-  --background: oklch(0.975 0.008 240);
-  --foreground: oklch(0.15 0.02 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 250);
+  /* Light Mode Tokens — Estádio de Dia (Vibrante e Nítido) */
+  --background: oklch(0.935 0.032 152);
+  --foreground: oklch(0.16 0.03 160);
+  --card: oklch(0.995 0.004 150);
+  --card-foreground: oklch(0.16 0.03 160);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 250);
-  /* Rich pitch emerald green */
-  --primary: oklch(0.52 0.17 145);
+  --popover-foreground: oklch(0.16 0.03 160);
+  /* Vivid pitch emerald green */
+  --primary: oklch(0.49 0.2 150);
   --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.55 0.18 145 / 0.25);
-  --secondary: oklch(0.94 0.01 240);
-  --secondary-foreground: oklch(0.18 0.02 250);
-  --muted: oklch(0.93 0.008 240);
-  --muted-foreground: oklch(0.42 0.02 250);
-  --accent: oklch(0.52 0.17 145);
+  --primary-glow: oklch(0.55 0.2 150 / 0.3);
+  --secondary: oklch(0.91 0.025 152);
+  --secondary-foreground: oklch(0.18 0.03 160);
+  --muted: oklch(0.915 0.022 152);
+  --muted-foreground: oklch(0.38 0.03 160);
+  --accent: oklch(0.52 0.2 150);
   --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.55 0.22 25);
+  --destructive: oklch(0.56 0.24 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.88 0.012 240);
-  --input: oklch(0.92 0.01 240);
-  --ring: oklch(0.52 0.17 145);
+  --border: oklch(0.81 0.045 152);
+  --input: oklch(0.94 0.018 152);
+  --ring: oklch(0.49 0.2 150);
 
-  --gradient-pitch: radial-gradient(circle at 50% 0%, oklch(0.52 0.17 145 / 0.08) 0%, transparent 70%);
-  --gradient-card: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-  --gradient-action: linear-gradient(135deg, oklch(0.52 0.17 145), oklch(0.48 0.16 160));
-  --shadow-emerald: 0 0 25px -5px oklch(0.52 0.17 145 / 0.15);
+  --pitch-bg:
+    radial-gradient(ellipse 85% 45% at 50% -5%, rgba(255, 255, 255, 0.65), transparent 72%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(16, 185, 129, 0.09) 0px,
+      rgba(16, 185, 129, 0.09) 72px,
+      rgba(5, 150, 105, 0.16) 72px,
+      rgba(5, 150, 105, 0.16) 144px
+    ),
+    linear-gradient(180deg, #dff5e7 0%, #d1eedc 50%, #c6e8d4 100%);
+  --pitch-line-color: rgba(255, 255, 255, 0.55);
+  --shadow-emerald: 0 8px 28px -6px oklch(0.52 0.18 150 / 0.22);
 }
 
 .dark {
-  /* Dark Mode Tokens (Deep pitch obsidian) */
-  --background: oklch(0.11 0.012 250);
-  --foreground: oklch(0.98 0.005 250);
-  --card: oklch(0.16 0.015 250);
-  --card-foreground: oklch(0.98 0.005 250);
-  --popover: oklch(0.16 0.015 250);
-  --popover-foreground: oklch(0.98 0.005 250);
-  /* Electric Emerald / Neon Pitch Green */
-  --primary: oklch(0.78 0.22 145);
-  --primary-foreground: oklch(0.12 0.02 145);
-  --primary-glow: oklch(0.85 0.2 145);
-  --secondary: oklch(0.22 0.018 250);
-  --secondary-foreground: oklch(0.95 0.005 250);
-  --muted: oklch(0.19 0.015 250);
-  --muted-foreground: oklch(0.68 0.015 250);
-  --accent: oklch(0.78 0.22 145);
-  --accent-foreground: oklch(0.12 0.02 145);
-  --destructive: oklch(0.6 0.23 20);
+  /* Dark Mode Tokens — Estádio Noturno Sob Refletores */
+  --background: oklch(0.13 0.028 158);
+  --foreground: oklch(0.98 0.006 155);
+  --card: oklch(0.165 0.026 160);
+  --card-foreground: oklch(0.98 0.006 155);
+  --popover: oklch(0.165 0.026 160);
+  --popover-foreground: oklch(0.98 0.006 155);
+  /* Electric Floodlit Emerald */
+  --primary: oklch(0.76 0.22 148);
+  --primary-foreground: oklch(0.11 0.03 155);
+  --primary-glow: oklch(0.82 0.22 148);
+  --secondary: oklch(0.22 0.03 160);
+  --secondary-foreground: oklch(0.96 0.008 155);
+  --muted: oklch(0.2 0.026 160);
+  --muted-foreground: oklch(0.74 0.02 155);
+  --accent: oklch(0.76 0.22 148);
+  --accent-foreground: oklch(0.11 0.03 155);
+  --destructive: oklch(0.62 0.24 22);
   --destructive-foreground: oklch(0.98 0.01 80);
-  --border: oklch(0.28 0.02 250 / 60%);
-  --input: oklch(0.22 0.018 250);
-  --ring: oklch(0.78 0.22 145);
+  --border: oklch(0.33 0.055 155 / 65%);
+  --input: oklch(0.21 0.03 160);
+  --ring: oklch(0.76 0.22 148);
 
-  --gradient-pitch: radial-gradient(circle at 50% 0%, oklch(0.25 0.08 145 / 0.25) 0%, transparent 70%);
-  --gradient-card: linear-gradient(180deg, oklch(0.18 0.015 250 / 0.85) 0%, oklch(0.14 0.012 250 / 0.95) 100%);
-  --gradient-action: linear-gradient(135deg, oklch(0.78 0.22 145), oklch(0.72 0.2 160));
-  --shadow-emerald: 0 0 25px -5px oklch(0.78 0.22 145 / 0.35);
+  --pitch-bg:
+    radial-gradient(ellipse 80% 42% at 50% -4%, rgba(16, 185, 129, 0.28), transparent 70%),
+    radial-gradient(ellipse 60% 35% at 15% 20%, rgba(14, 165, 233, 0.1), transparent 70%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(16, 185, 129, 0.045) 0px,
+      rgba(16, 185, 129, 0.045) 72px,
+      rgba(4, 55, 38, 0.28) 72px,
+      rgba(4, 55, 38, 0.28) 144px
+    ),
+    linear-gradient(180deg, #061c12 0%, #071912 55%, #05130d 100%);
+  --pitch-line-color: rgba(167, 243, 208, 0.09);
+  --shadow-emerald: 0 0 30px -5px oklch(0.76 0.22 148 / 0.35);
 }
 
 @layer base {
@@ -103,11 +120,44 @@
 
   html, body {
     background-color: var(--color-background);
+    background-image: var(--pitch-bg);
+    background-attachment: fixed;
     color: var(--color-foreground);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
+}
+
+/* Subtle football pitch chalk markings overlay */
+.pitch-field-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.pitch-field-lines::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(76vw, 520px);
+  height: min(76vw, 520px);
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  border: 2px solid var(--pitch-line-color);
+}
+
+.pitch-field-lines::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  height: 2px;
+  background: var(--pitch-line-color);
 }
 
 /* Custom scrollbars */

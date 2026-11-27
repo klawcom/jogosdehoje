@@ -60,11 +60,30 @@ export function parsePortugueseDate(title: string): { dateStr: string; displayDa
 
   const dateStr = `${year}-${month}-${day}`;
 
-  // Extract day of week if present
-  let dayOfWeek = 'Jogo';
-  const dowMatch = title.match(/jogos de\s+([a-zA-ZçÇ\-]+),/i);
-  if (dowMatch) {
-    dayOfWeek = dowMatch[1].charAt(0).toUpperCase() + dowMatch[1].slice(1).toLowerCase();
+  // Extract day of week (supporting accented Portuguese characters like Sábado, Terça) or derive from dateStr
+  let dayOfWeek = '';
+  const dowMatch = title.match(/jogos\s+de\s+([a-zA-ZÀ-ÿ-]+)\s*,/i);
+  if (dowMatch?.[1]) {
+    const rawDow = dowMatch[1].trim().toLowerCase();
+    dayOfWeek = rawDow.charAt(0).toUpperCase() + rawDow.slice(1);
+  }
+
+  if (!dayOfWeek) {
+    try {
+      const [yNum, mNum, dNum] = [
+        parseInt(year, 10),
+        parseInt(month, 10) - 1,
+        parseInt(day, 10),
+      ];
+      const utcDate = new Date(Date.UTC(yNum, mNum, dNum, 12, 0, 0));
+      const formattedDow = new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'long',
+        timeZone: 'UTC',
+      }).format(utcDate);
+      dayOfWeek = formattedDow.charAt(0).toUpperCase() + formattedDow.slice(1);
+    } catch {
+      dayOfWeek = 'Dia';
+    }
   }
 
   const monthNamesPt = [
@@ -216,11 +235,21 @@ export function parseGoalHtml(html: string): DaySchedule[] {
     }
   }
 
-  // Calculate isToday, isTomorrow, isYesterday
+  // Calculate isToday, isTomorrow, isYesterday relative to Brasília date
+  const [tY, tM, tD] = todayBrt.split('-').map(n => parseInt(n, 10));
+  const todayUtcMs = Date.UTC(tY, tM - 1, tD, 12, 0, 0);
+  const oneDayMs = 86_400_000;
+
   daySchedules.forEach((day, idx) => {
-    if (day.date === todayBrt) {
-      day.isToday = true;
-    } else if (idx === 0 && !daySchedules.some(d => d.isToday)) {
+    const [dY, dM, dD] = day.date.split('-').map(n => parseInt(n, 10));
+    const dayUtcMs = Date.UTC(dY, dM - 1, dD, 12, 0, 0);
+    const diffDays = Math.round((dayUtcMs - todayUtcMs) / oneDayMs);
+
+    day.isToday = diffDays === 0;
+    day.isTomorrow = diffDays === 1;
+    day.isYesterday = diffDays === -1;
+
+    if (idx === 0 && !daySchedules.some(d => d.date === todayBrt)) {
       day.isToday = true; // Default first day to active if exact date string differs
     }
   });
@@ -265,14 +294,15 @@ export async function scrapeGoalMatches(): Promise<{
       lastUpdated: getBrasiliaTimeString(),
       source: 'goal.com',
     };
-  } catch (err: any) {
-    console.warn('[Scraper] Falha ao raspar Goal.com:', err.message);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn('[Scraper] Falha ao raspar Goal.com:', msg);
     return {
       success: false,
       days: getFallbackDays(),
       lastUpdated: getBrasiliaTimeString(),
       source: 'backup',
-      message: err.message,
+      message: msg,
     };
   }
 }
