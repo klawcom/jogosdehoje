@@ -121,7 +121,7 @@ export function shareBrasileiraoStatsOnWhatsApp(stats: BrasileiraoStatsResponse)
     `🕒 Atualizado às ${stats.lastUpdated} (Brasília)\n\n` +
     `⚽ *Artilharia:*\n${topScorers}\n\n` +
     `🎯 *Assistências:*\n${topAssists}\n\n` +
-    `📲 *Veja estatísticas completas em tempo real:*\nhttps://jogosdehoje.lovable.app/estatisticas`;
+    `📲 *Veja estatísticas completas em tempo real:*\nhttps://jogosdehoje.lovable.app/brasileirao?tab=estatisticas`;
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
 }
