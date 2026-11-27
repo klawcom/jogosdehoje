@@ -106,9 +106,11 @@ export function SiteHeader({
         <div className="flex items-center justify-between gap-3">
           {/* Brand + Live Timestamp */}
           <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40 group-hover:scale-105 transition-transform">
-              <span className="text-xl">⚽</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Logo Jogos de Hoje"
+              className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/50 group-hover:scale-105 transition-transform"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground truncate">

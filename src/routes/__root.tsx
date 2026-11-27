@@ -36,11 +36,17 @@ export const Route = createRootRoute({
       { property: "og:title", content: "Jogos de Hoje — Futebol na TV e Streaming" },
       { property: "og:description", content: "Programação completa dos jogos de hoje no horário de Brasília com canais de transmissão." },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Jogos de Hoje" },
       { name: "twitter:description", content: "Horários e onde assistir aos jogos de futebol de hoje." },
+      { name: "twitter:image", content: "/logo.png" },
     ],
     links: [
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico?v=2" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png?v=2" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png?v=2" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=2" },
       {
         rel: "stylesheet",
         href: appCss,

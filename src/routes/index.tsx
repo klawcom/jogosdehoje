@@ -58,9 +58,11 @@ export const Route = createFileRoute("/")({
   },
   errorComponent: () => (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-2xl mb-3">
-        ⚽
-      </div>
+      <img
+        src="/logo.png"
+        alt="Logo Jogos de Hoje"
+        className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-1 ring-emerald-400/40 mb-3"
+      />
       <h2 className="text-lg font-black text-foreground mb-1">Jogos de Hoje</h2>
       <p className="text-xs text-muted-foreground mb-4 max-w-xs">
         Atualizando programação de TV e placares...
