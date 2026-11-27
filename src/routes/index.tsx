@@ -497,7 +497,7 @@ function JogosDeHoje() {
 
             {/* Quick Date Pills */}
             {days.length > 1 && (
-              <div className="mt-2.5 flex items-center justify-center gap-1.5 overflow-x-auto pt-2.5 border-t border-border/60 no-scrollbar">
+              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5 pt-2.5 border-t border-border/60">
                 {days.map((d, idx) => {
                   const isActive = idx === selectedDayIndex;
                   const pillLabel = d.isToday
@@ -510,7 +510,7 @@ function JogosDeHoje() {
                       key={d.date}
                       type="button"
                       onClick={() => setSelectedDayIndex(idx)}
-                      className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                      className={`shrink-0 rounded-xl px-2.5 sm:px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                         isActive
                           ? "bg-primary text-primary-foreground shadow-[0_0_14px_rgba(16,185,129,0.4)]"
                           : "bg-background/70 text-muted-foreground hover:text-foreground hover:bg-background border border-border/70"
