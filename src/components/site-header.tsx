@@ -7,17 +7,16 @@ import {
   Moon,
   Trophy,
   Calendar,
-  BarChart3,
   Menu,
   X,
   ChevronRight,
 } from 'lucide-react';
 
-export type ActiveSitePage = 'matches' | 'brasileirao' | 'estatisticas';
+export type ActiveSitePage = 'matches' | 'brasileirao';
 
 interface NavPageItem {
   id: ActiveSitePage;
-  to: '/' | '/brasileirao' | '/estatisticas';
+  to: '/' | '/brasileirao';
   label: string;
   shortLabel: string;
   description: string;
@@ -30,7 +29,7 @@ const NAV_PAGES: NavPageItem[] = [
     id: 'matches',
     to: '/',
     label: 'Jogos de Hoje',
-    shortLabel: 'Jogos',
+    shortLabel: 'Jogos de Hoje',
     description: 'Horários de Brasília, canais de TV e placares ao vivo',
     icon: Calendar,
     accentClass: 'text-primary',
@@ -38,20 +37,11 @@ const NAV_PAGES: NavPageItem[] = [
   {
     id: 'brasileirao',
     to: '/brasileirao',
-    label: 'Tabela Brasileirão A',
-    shortLabel: 'Tabela A',
-    description: 'Classificação atualizada em tempo real (G-4 e Z-4)',
+    label: 'Brasileirão Série A',
+    shortLabel: 'Brasileirão Série A',
+    description: 'Classificação, artilharia, assistências e estatísticas',
     icon: Trophy,
     accentClass: 'text-amber-500',
-  },
-  {
-    id: 'estatisticas',
-    to: '/estatisticas',
-    label: 'Estatísticas Série A',
-    shortLabel: 'Estatísticas',
-    description: 'Artilharia, assistências, cartões e melhores clubes',
-    icon: BarChart3,
-    accentClass: 'text-sky-500',
   },
 ];
 
@@ -68,7 +58,9 @@ interface SiteHeaderProps {
 }
 
 /**
- * Shared sticky site header with expandable navigation menu and quick page tabs.
+ * Shared responsive site header:
+ * - Desktop: balanced single row with brand left, nav tabs center, actions + Menu right
+ * - Mobile: compact top bar + full-width quick page switcher below
  */
 export function SiteHeader({
   activePage,
@@ -109,19 +101,20 @@ export function SiteHeader({
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/90 border-b border-border/80 px-4 pt-3 pb-2.5 sm:px-6">
-      <div className="mx-auto max-w-3xl">
-        <div className="flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-2.5 group min-w-0">
+    <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/90 border-b border-border/80 px-3.5 py-2.5 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex items-center justify-between gap-3">
+          {/* Brand + Live Timestamp */}
+          <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-[0_0_15px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/40 group-hover:scale-105 transition-transform">
               <span className="text-xl">⚽</span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight sm:text-xl text-foreground truncate">
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground truncate">
                   Jogos <span className="text-primary font-black">de Hoje</span>
                 </h1>
-                <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
+                <span className="hidden xl:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400 border border-emerald-500/25 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                   Brasília (UTC-3)
                 </span>
@@ -148,6 +141,32 @@ export function SiteHeader({
             </div>
           </Link>
 
+          {/* Desktop Center Navigation */}
+          <nav
+            aria-label="Navegação desktop"
+            className="hidden md:flex items-center gap-1 rounded-xl bg-muted/60 p-1 border border-border/70"
+          >
+            {NAV_PAGES.map((page) => {
+              const Icon = page.icon;
+              const isActive = activePage === page.id;
+              return (
+                <Link
+                  key={page.id}
+                  to={page.to}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                    isActive
+                      ? 'bg-card text-foreground shadow-sm border border-border/80'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? page.accentClass : ''}`} />
+                  <span>{page.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Controls: Theme + Favorites + Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0" ref={menuContainerRef}>
             <button
               type="button"
@@ -182,7 +201,6 @@ export function SiteHeader({
               </button>
             )}
 
-            {/* Navigation Menu Button (replaces top-right WhatsApp button) */}
             <div className="relative">
               <button
                 type="button"
@@ -210,7 +228,7 @@ export function SiteHeader({
                       Navegação do Site
                     </span>
                     <span className="text-[10px] font-semibold text-primary">
-                      {NAV_PAGES.length} páginas
+                      {NAV_PAGES.length} seções
                     </span>
                   </div>
 
@@ -263,10 +281,10 @@ export function SiteHeader({
           </div>
         </div>
 
-        {/* Quick Navigation Tabs */}
+        {/* Mobile Quick Navigation Tabs */}
         <nav
           aria-label="Navegação rápida"
-          className="mt-2.5 flex items-center gap-1 rounded-xl bg-muted/50 p-1 border border-border/60"
+          className="mt-2.5 flex md:hidden items-center gap-1 rounded-xl bg-muted/50 p-1 border border-border/60"
         >
           {NAV_PAGES.map((page) => {
             const Icon = page.icon;
@@ -275,15 +293,14 @@ export function SiteHeader({
               <Link
                 key={page.id}
                 to={page.to}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                   isActive
                     ? 'bg-card text-foreground shadow-sm border border-border/80'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? page.accentClass : ''}`} />
-                <span className="sm:hidden">{page.shortLabel}</span>
-                <span className="hidden sm:inline">{page.label}</span>
+                <span>{page.shortLabel}</span>
               </Link>
             );
           })}

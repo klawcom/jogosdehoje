@@ -402,7 +402,7 @@ function JogosDeHoje() {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 md:pb-16 antialiased selection:bg-primary/20 selection:text-primary">
       {/* Top ambient glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-56 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-64 bg-[radial-gradient(ellipse_at_top,_oklch(0.78_0.22_145_/_0.12),_transparent_70%)] pointer-events-none z-0" />
 
       {/* HEADER: Jogos de Hoje */}
       <SiteHeader
@@ -418,157 +418,174 @@ function JogosDeHoje() {
       />
 
       {/* MAIN CONTAINER */}
-      <main className="relative z-10 mx-auto max-w-3xl px-3 sm:px-6 pt-3">
-        {/* DATE SELECTOR BAR */}
-        <section className="mb-3 rounded-2xl border border-border bg-card/80 p-2.5 backdrop-blur-md shadow-md">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={handlePrevDay}
-              disabled={!canGoPrev}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none"
-              title="Dia anterior"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-
-            <div className="text-center min-w-0 flex-1">
-              <div className="inline-flex items-center gap-1.5">
-                {currentDay?.isToday && (
-                  <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary tracking-wide uppercase">
-                    HOJE
-                  </span>
-                )}
-                <h2 className="text-sm sm:text-base font-extrabold text-foreground truncate">
-                  {currentDay?.displayDate || "Jogos de Hoje"}
-                </h2>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                {filteredMatches.length} {filteredMatches.length === 1 ? "jogo encontrado" : "jogos encontrados"}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNextDay}
-              disabled={!canGoNext}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none"
-              title="Próximo dia"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Quick Date Pills */}
-          {days.length > 1 && (
-            <div className="mt-2.5 flex items-center justify-center gap-1.5 overflow-x-auto pt-2 border-t border-border/50 no-scrollbar">
-              {days.map((d, idx) => {
-                const isActive = idx === selectedDayIndex;
-                return (
-                  <button
-                    key={d.date}
-                    type="button"
-                    onClick={() => setSelectedDayIndex(idx)}
-                    className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-                        : "bg-background/50 text-muted-foreground hover:text-foreground hover:bg-background border border-border/50"
-                    }`}
-                  >
-                    {d.isToday ? "Hoje" : d.dayOfWeek} ({d.shortDate})
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* SEARCH & FILTERS */}
-        <section className="mb-4 space-y-2.5">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por time (ex: Flamengo, Grêmio, Real Madrid, Palmeiras...)"
-              className="w-full rounded-xl border border-border bg-card/70 pl-10 pr-9 py-2.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 backdrop-blur transition"
-            />
-            {searchQuery && (
+      <main className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-5">
+        {/* DESKTOP CONTROL DASHBOARD: Date Selector + Search & Channel Filters */}
+        <div className="mb-4 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 items-stretch">
+          {/* DATE SELECTOR BAR */}
+          <section className="lg:col-span-5 flex flex-col justify-between rounded-2xl border border-border bg-card/85 p-3 sm:p-3.5 backdrop-blur-md shadow-sm">
+            <div className="flex items-center justify-between gap-2">
               <button
                 type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                onClick={handlePrevDay}
+                disabled={!canGoPrev}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Dia anterior"
               >
-                <X className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
+
+              <div className="text-center min-w-0 flex-1">
+                <div className="inline-flex items-center gap-1.5">
+                  {currentDay?.isToday && (
+                    <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary tracking-wide uppercase">
+                      HOJE
+                    </span>
+                  )}
+                  <h2 className="text-sm sm:text-base font-extrabold text-foreground truncate">
+                    {currentDay?.displayDate || "Jogos de Hoje"}
+                  </h2>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {filteredMatches.length} {filteredMatches.length === 1 ? "jogo encontrado" : "jogos encontrados"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextDay}
+                disabled={!canGoNext}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-foreground transition hover:border-primary hover:bg-background disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                title="Próximo dia"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Quick Date Pills */}
+            {days.length > 1 && (
+              <div className="mt-2.5 flex items-center justify-center gap-1.5 overflow-x-auto pt-2.5 border-t border-border/50 no-scrollbar">
+                {days.map((d, idx) => {
+                  const isActive = idx === selectedDayIndex;
+                  return (
+                    <button
+                      key={d.date}
+                      type="button"
+                      onClick={() => setSelectedDayIndex(idx)}
+                      className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+                          : "bg-background/50 text-muted-foreground hover:text-foreground hover:bg-background border border-border/50"
+                      }`}
+                    >
+                      {d.isToday ? "Hoje" : d.dayOfWeek} ({d.shortDate})
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </div>
+          </section>
 
-          {/* Filter: Channel Type */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
-              <SlidersHorizontal className="h-3 w-3" /> Transmissão:
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedChannelType("all")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
-                selectedChannelType === "all"
-                  ? "bg-foreground text-background"
-                  : "bg-card/70 text-muted-foreground border border-border hover:text-foreground"
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedChannelType("aberta")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                selectedChannelType === "aberta"
-                  ? "bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                  : "bg-card/70 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
-              }`}
-            >
-              <Tv className="h-3 w-3" /> TV Aberta
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedChannelType("fechada")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                selectedChannelType === "fechada"
-                  ? "bg-sky-500 text-white shadow-[0_0_10px_rgba(14,165,233,0.3)]"
-                  : "bg-card/70 text-sky-400 border border-sky-500/30 hover:bg-sky-500/10"
-              }`}
-            >
-              TV Fechada
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedChannelType("streaming")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 ${
-                selectedChannelType === "streaming"
-                  ? "bg-violet-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]"
-                  : "bg-card/70 text-violet-400 border border-violet-500/30 hover:bg-violet-500/10"
-              }`}
-            >
-              Streaming
-            </button>
-          </div>
+          {/* SEARCH & CHANNEL FILTERS */}
+          <section className="lg:col-span-7 flex flex-col justify-between gap-2.5 rounded-2xl border border-border bg-card/85 p-3 sm:p-3.5 backdrop-blur-md shadow-sm">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por time ou campeonato (ex: Flamengo, Palmeiras, Premier League...)"
+                className="w-full rounded-xl border border-border bg-background/70 pl-10 pr-9 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-          {/* Filter: Championship */}
-          {availableChampionships.length > 1 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              <span className="text-[11px] font-semibold text-muted-foreground shrink-0 flex items-center gap-1">
-                <Trophy className="h-3 w-3" /> Campeonato:
+            {/* Filter: Channel Type */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-muted-foreground mr-1 flex items-center gap-1">
+                  <SlidersHorizontal className="h-3 w-3" /> Transmissão:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChannelType("all")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
+                    selectedChannelType === "all"
+                      ? "bg-foreground text-background"
+                      : "bg-background/60 text-muted-foreground border border-border hover:text-foreground"
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChannelType("aberta")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 cursor-pointer ${
+                    selectedChannelType === "aberta"
+                      ? "bg-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                      : "bg-background/60 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10"
+                  }`}
+                >
+                  <Tv className="h-3 w-3" /> TV Aberta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChannelType("fechada")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 cursor-pointer ${
+                    selectedChannelType === "fechada"
+                      ? "bg-sky-500 text-white shadow-[0_0_10px_rgba(14,165,233,0.3)]"
+                      : "bg-background/60 text-sky-600 dark:text-sky-400 border border-sky-500/30 hover:bg-sky-500/10"
+                  }`}
+                >
+                  TV Fechada
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedChannelType("streaming")}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition flex items-center gap-1 cursor-pointer ${
+                    selectedChannelType === "streaming"
+                      ? "bg-violet-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.3)]"
+                      : "bg-background/60 text-violet-600 dark:text-violet-400 border border-violet-500/30 hover:bg-violet-500/10"
+                  }`}
+                >
+                  Streaming
+                </button>
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs text-primary hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <X className="h-3 w-3" /> Limpar filtros
+                </button>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* CHAMPIONSHIP FILTER STRIP (wraps neatly on desktop, smooth scroll on mobile) */}
+        {availableChampionships.length > 1 && (
+          <section className="mb-5 rounded-2xl border border-border/70 bg-card/60 px-3 py-2.5 backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 overflow-x-auto lg:flex-wrap no-scrollbar">
+              <span className="text-[11px] font-semibold text-muted-foreground shrink-0 flex items-center gap-1 mr-1">
+                <Trophy className="h-3.5 w-3.5 text-amber-500" /> Campeonato:
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedChampionship("all")}
-                className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                   selectedChampionship === "all"
                     ? "bg-primary/20 text-primary border border-primary/40"
-                    : "bg-card/60 text-muted-foreground border border-border/70 hover:text-foreground"
+                    : "bg-background/60 text-muted-foreground border border-border/70 hover:text-foreground"
                 }`}
               >
                 Todos ({availableChampionships.length})
@@ -580,10 +597,10 @@ function JogosDeHoje() {
                     key={champ}
                     type="button"
                     onClick={() => setSelectedChampionship(champ)}
-                    className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold transition cursor-pointer ${
                       isSelected
                         ? "bg-primary/20 text-primary border border-primary/50"
-                        : "bg-card/60 text-muted-foreground border border-border/70 hover:text-foreground hover:border-primary/30"
+                        : "bg-background/60 text-muted-foreground border border-border/70 hover:text-foreground hover:border-primary/30"
                     }`}
                   >
                     {champ}
@@ -591,26 +608,13 @@ function JogosDeHoje() {
                 );
               })}
             </div>
-          )}
-
-          {hasActiveFilters && (
-            <div className="flex items-center justify-between rounded-xl bg-card/50 border border-border/60 px-3 py-1.5 text-xs text-muted-foreground">
-              <span>Filtros ativos aplicados</span>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-primary hover:underline font-bold flex items-center gap-1"
-              >
-                <X className="h-3 w-3" /> Limpar filtros
-              </button>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
 
         {/* PINNED FAVORITE TEAMS */}
         {favoriteMatches.length > 0 && (
-          <section className="mb-5 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-card/80 to-card/90 p-3.5 shadow-[0_0_25px_rgba(245,158,11,0.12)]">
-            <div className="mb-2.5 flex items-center justify-between">
+          <section className="mb-6 rounded-2xl border-2 border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-card/80 to-card/90 p-3.5 sm:p-4 shadow-[0_0_25px_rgba(245,158,11,0.12)]">
+            <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-400 text-amber-950 font-bold shadow-sm">
                   <Star className="h-3.5 w-3.5 fill-amber-950" />
@@ -624,7 +628,7 @@ function JogosDeHoje() {
               </div>
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {favoriteMatches.map((match) => (
                 <CompactMatchCard
                   key={`fav_${match.id}`}
@@ -642,12 +646,12 @@ function JogosDeHoje() {
 
         {/* SEQUÊNCIA DE CARDS POR HORÁRIO COM CORES DIFERENCIADAS */}
         {groupedByTime.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {groupedByTime.map(({ time, matches }, slotIdx) => {
               const theme = getTimeSlotTheme(slotIdx);
 
               return (
-                <section key={time} className="space-y-2">
+                <section key={time} className="space-y-2.5">
                   {/* Time slot header */}
                   <div className="flex items-center justify-between border-b border-border/80 pb-1.5 px-1">
                     <div className="flex items-center gap-2">
@@ -659,13 +663,13 @@ function JogosDeHoje() {
                         <span className="text-[11px] font-medium text-muted-foreground">(Brasília)</span>
                       </h3>
                     </div>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText} border ${theme.badgeBorder}`}>
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${theme.badgeBg} ${theme.badgeText} border ${theme.badgeBorder}`}>
                       {matches.length} {matches.length === 1 ? "jogo" : "jogos"}
                     </span>
                   </div>
 
                   {/* Cards na sequência com diferenciação visual elegante */}
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {matches.map((match) => (
                       <CompactMatchCard
                         key={match.id}
