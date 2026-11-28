@@ -10,7 +10,7 @@ O assistente opera com autonomia total de ponta a ponta:
 
 ## 2. Sincronização Automática Contínua (Pasta Local, GitHub e Lovable)
 
-A sincronização entre a pasta local (`c:\jogosdehoje`), o GitHub (`origin/main`) e o site no Lovable deve ocorrer **automaticamente em toda sessão ou tarefa**, sem depender de solicitação explícita do usuário:
+A sincronização entre a pasta local (`C:\IA\jogosdehoje`), o GitHub (`origin/main`) e o site no Lovable deve ocorrer **automaticamente em toda sessão ou tarefa**, sem depender de solicitação explícita do usuário:
 
 1. **No início de qualquer tarefa ou sessão (automático):**
    - Executar imediatamente `git pull origin main` antes de ler ou modificar código, garantindo que edições feitas diretamente via GitHub ou pelo Lovable sejam trazidas para a pasta local.
