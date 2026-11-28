@@ -46,6 +46,7 @@ import { enrichMatchesWithScores } from "../lib/live-scores";
 import { trackVisit } from "../lib/analytics";
 import { useAuth } from "../lib/auth";
 import { AuthModal } from "../components/auth-modal";
+import { SiteFooter } from "../components/site-footer";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
@@ -80,7 +81,7 @@ export const Route = createFileRoute("/")({
   errorComponent: () => (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
       <img
-        src="/logo.png?v=4"
+        src="/logo.png?v=5"
         alt="Logo Jogos ao Vivo"
         className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-1 ring-emerald-400/40 mb-3"
       />
@@ -848,6 +849,9 @@ function JogosDeHoje() {
         onToggleFavoriteChampionship={handleToggleChampionshipAlertWithAuth}
         onOpenNotifications={() => setShowNotificationModal(true)}
       />
+
+      {/* RODAPÉ OFICIAL COM LGPD, DIREITOS E PROPÓSITO LIMPO */}
+      <SiteFooter onOpenNotifications={() => setShowNotificationModal(true)} />
 
       {/* NOTIFICATIONS & PUSH ALERTS MODAL */}
       <NotificationModal

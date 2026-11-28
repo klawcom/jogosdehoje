@@ -35,6 +35,9 @@ import {
   Trash2,
   PieChart,
   TrendingUp,
+  Upload,
+  Image as ImageIcon,
+  RotateCcw,
 } from 'lucide-react';
 import { useSiteSettings, SiteSettings } from '../lib/settings';
 import {
@@ -648,7 +651,7 @@ function AdminDashboardPage() {
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <img
-                  src={formData.custom_logo_url || '/logo.png?v=4'}
+                  src={formData.custom_logo_url || '/logo.png?v=5'}
                   alt="Logo"
                   className="h-8 w-8 rounded-xl object-cover ring-1 ring-primary/40"
                 />
@@ -1142,26 +1145,223 @@ function AdminDashboardPage() {
                     />
                   </div>
 
-                  <div className="space-y-2 sm:col-span-2">
-                    <label className="text-xs font-bold text-foreground flex items-center justify-between">
-                      <span>URL do Logo do Site / App</span>
-                      <span className="text-[11px] text-muted-foreground font-normal">
-                        Padrão: /logo.png?v=4 (Bola clássica com gramado)
+                  {/* GERENCIAMENTO E TROCA DE ÍCONES E LOGO DO SITE */}
+                  <div className="space-y-4 sm:col-span-2 pt-2 border-t border-border/80">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <label className="text-xs font-black text-foreground flex items-center gap-2">
+                          <ImageIcon className="h-4 w-4 text-emerald-500" />
+                          <span>Ícone, Logo e Favicon Oficial do Site</span>
+                        </label>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Troque o ícone do site escolhendo presets oficiais, fazendo upload de arquivo ou colando uma URL.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=5' })}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground transition bg-muted/50 px-2.5 py-1 rounded-lg border border-border cursor-pointer self-start sm:self-auto"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        <span>Restaurar Ícone Oficial</span>
+                      </button>
+                    </div>
+
+                    {/* Presets Rápidos */}
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                        Opções e Presets de Ícones:
                       </span>
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={formData.custom_logo_url || '/logo.png?v=4'}
-                        alt="Preview do Logo"
-                        className="h-12 w-12 rounded-xl object-cover border border-border shadow-md shrink-0 ring-1 ring-emerald-500/40"
-                      />
-                      <input
-                        type="text"
-                        value={formData.custom_logo_url}
-                        onChange={(e) => setFormData({ ...formData, custom_logo_url: e.target.value })}
-                        placeholder="/logo.png?v=4 ou cole URL externa https://..."
-                        className="flex-1 rounded-xl border border-border bg-background py-2.5 px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        {/* Preset 1: Oficial Novo */}
+                        <div
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=5' })}
+                          className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
+                            formData.custom_logo_url === '/logo.png?v=5' || !formData.custom_logo_url
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
+                              : 'border-border bg-card/60 hover:bg-muted/50'
+                          }`}
+                        >
+                          <img
+                            src="/logo.png?v=5"
+                            alt="Gramado Oficial"
+                            className="h-10 w-10 rounded-xl object-cover ring-1 ring-emerald-500/30 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-foreground truncate flex items-center gap-1">
+                              Gramado Oficial
+                              <span className="text-[9px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1 py-0.2 rounded font-bold">
+                                Ativo
+                              </span>
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              Bola grande no gramado
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Preset 2: Bola Clássica */}
+                        <div
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.jpg?v=5' })}
+                          className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
+                            formData.custom_logo_url === '/logo.jpg?v=5'
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
+                              : 'border-border bg-card/60 hover:bg-muted/50'
+                          }`}
+                        >
+                          <img
+                            src="/logo.jpg?v=5"
+                            alt="Bola Clássica P&B"
+                            className="h-10 w-10 rounded-xl object-cover ring-1 ring-primary/30 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-foreground truncate">
+                              Bola Clássica
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              Tradicional alta definição
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Preset 3: App PWA Icon */}
+                        <div
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/icon-192.png?v=5' })}
+                          className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
+                            formData.custom_logo_url === '/icon-192.png?v=5'
+                              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
+                              : 'border-border bg-card/60 hover:bg-muted/50'
+                          }`}
+                        >
+                          <img
+                            src="/icon-192.png?v=5"
+                            alt="Ícone de App"
+                            className="h-10 w-10 rounded-xl object-cover ring-1 ring-primary/30 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-foreground truncate">
+                              Ícone App Celular
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              Otimizado para PWA
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Upload de Imagem e URL Personalizada */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      {/* Upload de Imagem */}
+                      <div className="rounded-xl border border-dashed border-border p-3 flex flex-col justify-between gap-2 bg-muted/20">
+                        <div>
+                          <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                            <Upload className="h-3.5 w-3.5 text-primary" />
+                            Upload de Nova Imagem do Dispositivo
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            Envie arquivo PNG, JPG, WebP ou SVG do seu computador/celular.
+                          </p>
+                        </div>
+                        <label className="inline-flex items-center justify-center gap-2 rounded-xl bg-muted/80 hover:bg-muted px-3 py-2 text-xs font-bold text-foreground border border-border cursor-pointer transition shadow-sm">
+                          <Upload className="h-3.5 w-3.5" />
+                          <span>Selecionar Imagem do Dispositivo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const dataUrl = event.target?.result as string;
+                                if (dataUrl) {
+                                  setFormData({ ...formData, custom_logo_url: dataUrl });
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      {/* URL Externa */}
+                      <div className="rounded-xl border border-border p-3 flex flex-col justify-between gap-2 bg-muted/20">
+                        <div>
+                          <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                            <Globe className="h-3.5 w-3.5 text-primary" />
+                            URL Externa da Imagem
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            Ou insira um link direto de imagem na web (https://...)
+                          </p>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.custom_logo_url}
+                          onChange={(e) => setFormData({ ...formData, custom_logo_url: e.target.value })}
+                          placeholder="/logo.png?v=5 ou https://..."
+                          className="w-full rounded-xl border border-border bg-background py-2 px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* PRÉVIA VISUAL EM TEMPO REAL */}
+                    <div className="rounded-2xl border border-border/80 bg-background/80 p-3.5 space-y-2">
+                      <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Eye className="h-3.5 w-3.5 text-primary" />
+                        Pré-visualização ao vivo do ícone nos diferentes ambientes:
+                      </p>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        {/* Preview 1: No Cabeçalho */}
+                        <div className="rounded-xl border border-border/60 bg-card p-2.5 flex items-center gap-2.5 shadow-sm">
+                          <img
+                            src={formData.custom_logo_url || '/logo.png?v=5'}
+                            alt="Prévia Cabeçalho"
+                            className="h-9 w-9 rounded-xl object-cover ring-1 ring-emerald-500/40 shadow shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-black truncate">{formData.site_title || 'Jogos ao Vivo'}</p>
+                            <p className="text-[9px] text-muted-foreground truncate">No topo do site</p>
+                          </div>
+                        </div>
+
+                        {/* Preview 2: App no Celular */}
+                        <div className="rounded-xl border border-border/60 bg-card p-2.5 flex items-center gap-2.5 shadow-sm">
+                          <div className="relative">
+                            <img
+                              src={formData.custom_logo_url || '/logo.png?v=5'}
+                              alt="Prévia PWA"
+                              className="h-10 w-10 rounded-2xl object-cover shadow-md ring-2 ring-emerald-500/50 shrink-0"
+                            />
+                            <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[8px] font-black text-white">
+                              ✓
+                            </span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black truncate">Ícone PWA Celular</p>
+                            <p className="text-[9px] text-muted-foreground truncate">Tela inicial mobile</p>
+                          </div>
+                        </div>
+
+                        {/* Preview 3: Aba Favicon */}
+                        <div className="rounded-xl border border-border/60 bg-muted/60 p-2.5 flex items-center gap-2 shadow-sm">
+                          <img
+                            src={formData.custom_logo_url || '/logo.png?v=5'}
+                            alt="Prévia Favicon"
+                            className="h-5 w-5 rounded-md object-cover shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="rounded bg-background/80 px-2 py-0.5 text-[10px] font-bold truncate border border-border/50 text-foreground">
+                              Jogos ao Vivo — Futebol...
+                            </div>
+                            <p className="text-[9px] text-muted-foreground truncate mt-0.5">Favicon do navegador</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

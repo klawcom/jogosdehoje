@@ -169,7 +169,7 @@ export function SiteHeader({
           {/* Brand + Live Timestamp */}
           <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
             <img
-              src={settings.custom_logo_url || '/logo.png?v=4'}
+              src={settings.custom_logo_url || '/logo.png?v=5'}
               alt={settings.site_title || 'Logo Jogos ao Vivo'}
               className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_0_16px_rgba(16,185,129,0.4)] ring-1 ring-emerald-400/60 group-hover:scale-105 transition-transform"
             />

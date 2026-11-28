@@ -41,6 +41,7 @@ import { TeamBadge } from '../components/team-badge';
 import { FloatingWhatsAppButton } from '../components/floating-whatsapp-button';
 import { FavoritesModal } from '../components/favorites-modal';
 import { NotificationModal } from '../components/notification-modal';
+import { SiteFooter } from '../components/site-footer';
 import { usePushNotifications } from '../lib/push-notifications';
 import { trackVisit } from '../lib/analytics';
 
@@ -1333,6 +1334,9 @@ function BrasileiraoTabelaPage() {
           }
         />
       )}
+
+      {/* RODAPÉ OFICIAL COM LGPD, DIREITOS E PROPÓSITO LIMPO */}
+      <SiteFooter onOpenNotifications={() => setShowNotificationModal(true)} />
 
       <FavoritesModal
         isOpen={showFavoritesModal}
