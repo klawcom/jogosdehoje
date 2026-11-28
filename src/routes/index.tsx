@@ -44,6 +44,8 @@ import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
 import { useTheme } from "../lib/theme";
 import { enrichMatchesWithScores } from "../lib/live-scores";
 import { trackVisit } from "../lib/analytics";
+import { useAuth } from "../lib/auth";
+import { AuthModal } from "../components/auth-modal";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
@@ -260,6 +262,15 @@ function JogosDeHoje() {
   } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
   const { isSubscribed: isNotificationsActive } = usePushNotifications();
+  const { requireAuth, isAuthModalOpen, closeAuthModal, handleAuthSuccess } = useAuth();
+
+  const handleToggleMatchAlertWithAuth = (matchId: string) => {
+    requireAuth(() => toggleMatchAlert(matchId));
+  };
+
+  const handleToggleChampionshipAlertWithAuth = (championship: string) => {
+    requireAuth(() => toggleFavoriteChampionship(championship));
+  };
 
   // Registrar visita de página para dashboard analítico do gestor
   useEffect(() => {
@@ -726,7 +737,7 @@ function JogosDeHoje() {
                   onToggleFavorite={toggleFavorite}
                   onOpenDetails={() => setActiveMatch(match)}
                   hasMatchAlert={isMatchAlertActive(match.id)}
-                  onToggleMatchAlert={() => toggleMatchAlert(match.id)}
+                  onToggleMatchAlert={() => handleToggleMatchAlertWithAuth(match.id)}
                   onOpenLineup={() => setLineupMatch(match)}
                   theme={getTimeSlotTheme(3)} // Gold/Amber theme for favorites
                   highlightFavorite
@@ -820,7 +831,7 @@ function JogosDeHoje() {
           likeCount={getLikeCount(activeMatch.id)}
           onToggleLike={() => toggleLike(activeMatch.id)}
           hasMatchAlert={isMatchAlertActive(activeMatch.id)}
-          onToggleMatchAlert={() => toggleMatchAlert(activeMatch.id)}
+          onToggleMatchAlert={() => handleToggleMatchAlertWithAuth(activeMatch.id)}
           onOpenLineup={() => setLineupMatch(activeMatch)}
         />
       )}
@@ -834,7 +845,7 @@ function JogosDeHoje() {
         onToggleFavorite={toggleFavorite}
         favoriteChampionships={favoriteChampionships}
         isFavoriteChampionship={isFavoriteChampionship}
-        onToggleFavoriteChampionship={toggleFavoriteChampionship}
+        onToggleFavoriteChampionship={handleToggleChampionshipAlertWithAuth}
         onOpenNotifications={() => setShowNotificationModal(true)}
       />
 
@@ -854,7 +865,16 @@ function JogosDeHoje() {
         match={lineupMatch}
         displayDate={currentDay?.displayDate}
         hasMatchAlert={lineupMatch ? isMatchAlertActive(lineupMatch.id) : false}
-        onToggleMatchAlert={() => lineupMatch && toggleMatchAlert(lineupMatch.id)}
+        onToggleMatchAlert={() => lineupMatch && handleToggleMatchAlertWithAuth(lineupMatch.id)}
+      />
+
+      {/* AUTHENTICATION MODAL */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        onSuccess={handleAuthSuccess}
+        title="Entre para Ativar Alertas"
+        subtitle="Conecte-se com Google, Microsoft, Apple, WhatsApp ou E-mail para receber alertas de gols e partidas."
       />
     </div>
   );

@@ -12,12 +12,17 @@ import {
   X,
   Loader2,
   Sparkles,
+  Lock,
+  LogIn,
+  User,
 } from 'lucide-react';
 import {
   usePushNotifications,
   NotificationPreferences,
 } from '../lib/push-notifications';
 import { TeamBadge } from './team-badge';
+import { useAuth } from '../lib/auth';
+import { AuthModal } from './auth-modal';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -45,12 +50,18 @@ export function NotificationModal({
     sendLocalTestNotification,
   } = usePushNotifications();
 
+  const { user, isAuthenticated, signOut } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [testSent, setTestSent] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleToggle = async () => {
+    if (!isAuthenticated) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     setFeedbackMessage(null);
     const result = await toggleSubscription(favorites, favoriteChampionships);
     setFeedbackMessage(result.message);
@@ -146,6 +157,61 @@ export function NotificationModal({
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto p-5 space-y-5">
+          {/* Account Authentication Banner */}
+          {!isAuthenticated ? (
+            <div className="rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-emerald-500/10 to-primary/10 p-4 space-y-3 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-black shadow-md">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-extrabold text-xs sm:text-sm text-foreground">
+                    Login Necessário para Receber Alertas
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Conecte sua conta com <strong>Google</strong>, <strong>Microsoft</strong>, <strong>Apple</strong> ou receba um código de 6 dígitos no <strong>WhatsApp</strong> ou <strong>E-mail</strong> para receber alertas no celular.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 px-4 text-xs font-black text-primary-foreground shadow-md hover:opacity-95 transition cursor-pointer"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>Entrar com Google, Microsoft, Apple ou WhatsApp</span>
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-3.5 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-black">
+                  {user?.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-extrabold text-foreground truncate flex items-center gap-1.5">
+                    {user?.name}
+                    <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
+                      {user?.provider.toUpperCase()}
+                    </span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {user?.email || user?.phone || 'Conta conectada aos alertas'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-[11px] font-bold text-destructive hover:underline shrink-0 cursor-pointer"
+              >
+                Sair
+              </button>
+            </div>
+          )}
+
           {/* Status Banner */}
           {!isSupported ? (
             <div className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-3.5 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-300">
@@ -387,6 +453,18 @@ export function NotificationModal({
           </button>
         </div>
       </div>
+
+      {/* Auth Modal Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          setIsAuthModalOpen(false);
+          handleToggle();
+        }}
+        title="Entre para Ativar Notificações"
+        subtitle="Conecte sua conta para garantir que você receba todos os gols, escalações e partidas em tempo real."
+      />
     </div>
   );
 }
