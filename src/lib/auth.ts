@@ -13,6 +13,20 @@ export interface UserProfile {
   createdAt: string;
 }
 
+/**
+ * E-mails autorizados com permissão de Gestor / Admin
+ * Todas as senhas por PIN foram revogadas; o acesso é liberado exclusivamente para estes e-mails.
+ */
+export const AUTHORIZED_ADMIN_EMAILS = [
+  'klaw.com@gmail.com',
+  'klawdhynney@gmail.com',
+] as const;
+
+export function isAuthorizedAdmin(email?: string | null): boolean {
+  if (!email) return false;
+  return AUTHORIZED_ADMIN_EMAILS.includes(email.trim().toLowerCase() as any);
+}
+
 const STORAGE_KEY = 'jogosdehoje_auth_user';
 const PENDING_OTP_KEY = 'jogosdehoje_pending_otp';
 
@@ -339,6 +353,7 @@ export function useAuth() {
   return {
     user,
     isAuthenticated: !!user,
+    isAdmin: isAuthorizedAdmin(user?.email),
     isAuthModalOpen,
     openAuthModal: () => setIsAuthModalOpen(true),
     closeAuthModal: () => {

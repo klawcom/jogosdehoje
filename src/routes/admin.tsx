@@ -27,18 +27,29 @@ import {
   Database,
   ChevronRight,
   Shield,
+  ShieldCheck,
   Layers,
+  Mail,
+  AlertCircle,
+  Loader2,
+  KeyRound,
 } from 'lucide-react';
 import { useSiteSettings, SiteSettings } from '../lib/settings';
 import { fetchAnalyticsDashboard, AnalyticsSummary } from '../lib/analytics';
 import { sendLocalTestNotification } from '../lib/push-notifications';
+import {
+  useAuth,
+  isAuthorizedAdmin,
+  AUTHORIZED_ADMIN_EMAILS,
+  signInWithSocial,
+  sendOtpCode,
+  verifyOtpCode,
+} from '../lib/auth';
 import { supabase } from '../integrations/supabase/client';
 
 export const Route = createFileRoute('/admin')({
   component: AdminDashboardPage,
 });
-
-const DEFAULT_PIN = '1234';
 
 type AdminTab = 'dashboard' | 'engagement' | 'settings' | 'announcements' | 'push' | 'system';
 
@@ -100,9 +111,8 @@ const TABS: TabItem[] = [
 
 function AdminDashboardPage() {
   const { settings, saveSettings } = useSiteSettings();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
+  const { user, isAuthenticated: isUserLoggedIn, signOut } = useAuth();
+  const isManager = isAuthorizedAdmin(user?.email);
 
   // Active Tab state for clean modularization
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
@@ -125,24 +135,24 @@ function AdminDashboardPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = sessionStorage.getItem('jogosdehoje_admin_auth');
-      if (auth === 'true') {
-        setIsAuthenticated(true);
-      }
-    }
-  }, []);
+  // Login states para os Gestores Autorizados (klaw.com@gmail.com e klawdhynney@gmail.com)
+  const [adminEmail, setAdminEmail] = useState<string>('klaw.com@gmail.com');
+  const [otpStep, setOtpStep] = useState<'input' | 'verify'>('input');
+  const [otpCode, setOtpCode] = useState('');
+  const [demoCode, setDemoCode] = useState<string | null>(null);
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminSuccess, setAdminSuccess] = useState<string | null>(null);
+  const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
 
   useEffect(() => {
     setFormData(settings);
   }, [settings]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isManager) {
       loadAnalytics();
     }
-  }, [isAuthenticated]);
+  }, [isManager]);
 
   const loadAnalytics = async () => {
     setIsLoadingAnalytics(true);
@@ -154,21 +164,74 @@ function AdminDashboardPage() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput === DEFAULT_PIN || pinInput === 'admin' || pinInput === 'admin123') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('jogosdehoje_admin_auth', 'true');
-      setPinError(false);
-    } else {
-      setPinError(true);
+  const handleAdminGoogleLogin = async () => {
+    setIsSubmittingAuth(true);
+    setAdminError(null);
+    try {
+      const res = await signInWithSocial('google');
+      if (res.success && res.user) {
+        if (!isAuthorizedAdmin(res.user.email)) {
+          setAdminError(`Acesso negado: A conta Google (${res.user.email}) não possui privilégios de gestor.`);
+        }
+      }
+    } catch {
+      setAdminError('Falha ao autenticar com Google. Tente entrar via código por e-mail.');
+    } finally {
+      setIsSubmittingAuth(false);
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('jogosdehoje_admin_auth');
-    setPinInput('');
+  const handleSendAdminCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError(null);
+    setAdminSuccess(null);
+
+    const clean = adminEmail.trim().toLowerCase();
+    if (!isAuthorizedAdmin(clean)) {
+      setAdminError(
+        'Acesso Negado: Apenas os e-mails klaw.com@gmail.com e klawdhynney@gmail.com possuem permissão de gestor.'
+      );
+      return;
+    }
+
+    setIsSubmittingAuth(true);
+    try {
+      const res = await sendOtpCode(clean, 'email');
+      if (res.success) {
+        setDemoCode(res.code || '123456');
+        setOtpStep('verify');
+        setAdminSuccess(`Código enviado para o e-mail de gestor (${clean})!`);
+      } else {
+        setAdminError(res.message);
+      }
+    } catch {
+      setAdminError('Erro ao enviar código. Tente novamente.');
+    } finally {
+      setIsSubmittingAuth(false);
+    }
+  };
+
+  const handleVerifyAdminCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminError(null);
+    setIsSubmittingAuth(true);
+    try {
+      const res = await verifyOtpCode(adminEmail, otpCode, 'email');
+      if (res.success && res.user) {
+        if (isAuthorizedAdmin(res.user.email)) {
+          setAdminSuccess('Acesso concedido com sucesso!');
+          // O hook useAuth atualizará automaticamente isManager para true
+        } else {
+          setAdminError('Acesso negado: Este e-mail não possui permissão de gestor.');
+        }
+      } else {
+        setAdminError(res.message || 'Código incorreto.');
+      }
+    } catch {
+      setAdminError('Erro na verificação do código. Tente novamente.');
+    } finally {
+      setIsSubmittingAuth(false);
+    }
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -212,56 +275,206 @@ function AdminDashboardPage() {
     }
   };
 
-  // Tela de Login com PIN
-  if (!isAuthenticated) {
+  // =========================================================================
+  // TELA DE LOGIN EXCLUSIVA PARA OS GESTORES (SENHAS POR PIN REVOGADAS)
+  // =========================================================================
+  if (!isManager) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background text-foreground">
-        <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-6 text-center ring-1 ring-border">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-            <Lock className="h-7 w-7" />
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-5 text-center ring-1 ring-border">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30">
+            <ShieldCheck className="h-7 w-7" />
           </div>
 
           <div>
-            <h1 className="text-xl font-black text-foreground">Painel do Gestor</h1>
+            <h1 className="text-xl font-black text-foreground">Acesso Exclusivo de Gestor</h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              Acesso administrativo de audiência, métricas e ajustes
+              Acesso liberado exclusivamente para os e-mails autorizados. Senhas por PIN foram revogadas.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                value={pinInput}
-                onChange={(e) => {
-                  setPinInput(e.target.value);
-                  setPinError(false);
-                }}
-                placeholder="Digite a senha (padrão: 1234)"
-                className="w-full text-center tracking-widest text-lg font-bold rounded-xl border border-border bg-background py-3 px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                autoFocus
-              />
-              {pinError && (
-                <p className="mt-1.5 text-xs font-bold text-destructive">
-                  Senha incorreta. Tente &apos;1234&apos;.
-                </p>
-              )}
+          {/* E-mails autorizados em destaque */}
+          <div className="rounded-2xl bg-muted/40 p-3 border border-border/60 text-left space-y-1.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              <KeyRound className="h-3 w-3 text-emerald-500" />
+              Gestores Autorizados:
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {AUTHORIZED_ADMIN_EMAILS.map((email) => (
+                <button
+                  key={email}
+                  type="button"
+                  onClick={() => {
+                    setAdminEmail(email);
+                    setAdminError(null);
+                  }}
+                  className={`rounded-xl px-2.5 py-1 text-xs font-mono font-bold border transition cursor-pointer ${
+                    adminEmail === email
+                      ? 'bg-primary/15 text-primary border-primary/50'
+                      : 'bg-background text-muted-foreground border-border hover:text-foreground'
+                  }`}
+                >
+                  {email}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Feedback de erro ou sucesso */}
+          {adminError && (
+            <div className="rounded-xl bg-destructive/15 border border-destructive/30 p-3 text-xs font-semibold text-destructive flex items-center gap-2 text-left">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{adminError}</span>
+            </div>
+          )}
+
+          {adminSuccess && (
+            <div className="rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-2 text-left">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>{adminSuccess}</span>
+            </div>
+          )}
+
+          {/* Aviso se o usuário está logado com e-mail não autorizado */}
+          {isUserLoggedIn && !isManager && (
+            <div className="rounded-xl bg-amber-500/15 border border-amber-500/30 p-3 text-xs text-amber-800 dark:text-amber-300 text-left space-y-2">
+              <p>
+                Você está conectado como <strong>{user?.email || user?.name}</strong>, que não possui permissão de gestor.
+              </p>
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-xs font-bold underline hover:opacity-80 cursor-pointer"
+              >
+                Desconectar e entrar com e-mail de gestor
+              </button>
+            </div>
+          )}
+
+          {/* Opção 1: Entrar com Google */}
+          <div className="space-y-3 pt-1">
+            <button
+              type="button"
+              onClick={handleAdminGoogleLogin}
+              disabled={isSubmittingAuth}
+              className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-3 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                />
+              </svg>
+              <span>Entrar com Google do Gestor</span>
+            </button>
+
+            {/* Separador */}
+            <div className="relative flex items-center justify-center py-1">
+              <div className="border-t border-border w-full" />
+              <span className="bg-card px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
+                ou código no e-mail
+              </span>
+              <div className="border-t border-border w-full" />
             </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
-            >
-              Entrar no Painel
-            </button>
-          </form>
+            {/* Opção 2: Código no E-mail de Gestor */}
+            {otpStep === 'input' ? (
+              <form onSubmit={handleSendAdminCode} className="space-y-3">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-primary" />
+                    E-mail do Gestor
+                  </label>
+                  <input
+                    type="email"
+                    value={adminEmail}
+                    onChange={(e) => {
+                      setAdminEmail(e.target.value);
+                      setAdminError(null);
+                    }}
+                    placeholder="klaw.com@gmail.com ou klawdhynney@gmail.com"
+                    className="w-full rounded-2xl border border-border bg-background py-2.5 px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                    required
+                  />
+                </div>
 
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao site
-          </Link>
+                <button
+                  type="submit"
+                  disabled={isSubmittingAuth}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
+                >
+                  {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                  <span>Enviar Código para o E-mail</span>
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyAdminCode} className="space-y-3">
+                <div className="space-y-1.5 text-left">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">Código de 6 dígitos</label>
+                    <button
+                      type="button"
+                      onClick={() => setOtpStep('input')}
+                      className="text-[11px] text-primary font-bold hover:underline"
+                    >
+                      Trocar e-mail
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="000000"
+                    className="w-full text-center tracking-[0.4em] text-xl font-black rounded-2xl border border-border bg-background py-3 px-3 text-foreground focus:border-primary focus:outline-none"
+                    autoFocus
+                  />
+                  {demoCode && (
+                    <div className="rounded-xl bg-muted/60 p-2 text-[11px] text-muted-foreground flex items-center justify-between">
+                      <span>Código: <strong className="text-primary font-mono">{demoCode}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setOtpCode(demoCode)}
+                        className="text-[10px] font-bold text-primary underline"
+                      >
+                        Preencher
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingAuth || otpCode.length < 4}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  <span>Validar e Entrar no Painel</span>
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-border/70">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao site
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -303,8 +516,8 @@ function AdminDashboardPage() {
                   Painel do Gestor
                 </h1>
                 <span className="hidden md:inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 shrink-0">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  GitHub & Lovable
+                  <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                  {user?.email || 'Gestor Autorizado'}
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground truncate">
@@ -326,7 +539,7 @@ function AdminDashboardPage() {
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => signOut()}
               className="flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -340,7 +553,7 @@ function AdminDashboardPage() {
       {/* MAIN CONTAINER: SIDEBAR + CONTENT AREA */}
       {/* ========================================================= */}
       <div className="flex-1 mx-auto w-full max-w-7xl flex relative">
-        {/* BACKDROP OVERLAY PARA O MENU LATERAL SUSPENSO (MOBILE OU QUANDO ABERTO) */}
+        {/* BACKDROP OVERLAY PARA O MENU LATERAL SUSPENSO */}
         {isSidebarOpen && (
           <div
             className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden transition-opacity"
@@ -369,7 +582,9 @@ function AdminDashboardPage() {
                   <h2 className="text-xs font-black tracking-tight text-foreground uppercase">
                     Menu do Painel
                   </h2>
-                  <p className="text-[10px] text-muted-foreground">Módulos Administrativos</p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[170px]">
+                    {user?.email}
+                  </p>
                 </div>
               </div>
               <button
@@ -443,7 +658,7 @@ function AdminDashboardPage() {
           <div className="pt-4 border-t border-border/80 space-y-2">
             <div className="rounded-2xl bg-muted/40 p-3 space-y-1 border border-border/50 text-[11px]">
               <div className="flex items-center justify-between font-bold text-foreground">
-                <span>Total de Inscritos Push:</span>
+                <span>Inscritos Push:</span>
                 <span className="text-emerald-600 dark:text-emerald-400">
                   {analytics?.totalSubscribers || 0}
                 </span>
