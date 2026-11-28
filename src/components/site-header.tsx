@@ -169,7 +169,7 @@ export function SiteHeader({
           {/* Brand + Live Timestamp */}
           <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
             <img
-              src={settings.custom_logo_url || '/logo.png?v=5'}
+              src={settings.custom_logo_url || '/logo.png?v=6'}
               alt={settings.site_title || 'Logo Jogos ao Vivo'}
               className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_0_16px_rgba(16,185,129,0.4)] ring-1 ring-emerald-400/60 group-hover:scale-105 transition-transform"
             />
@@ -326,65 +326,135 @@ export function SiteHeader({
               </button>
             )}
 
-            {/* User Profile / Login Button */}
-            <button
-              type="button"
-              onClick={() => {
-                if (isAuthenticated) {
-                  setMenuOpen((prev) => !prev);
-                } else {
-                  setAuthModalOpen(true);
-                }
-              }}
-              className={`relative flex items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-2 text-xs font-bold transition cursor-pointer ${
-                isAuthenticated
-                  ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
-                  : 'border-border bg-background/70 text-foreground hover:border-primary/60 hover:bg-background'
-              }`}
-              title={
-                isAuthenticated
-                  ? `Conectado como ${user?.name}`
-                  : 'Fazer Login (Google, Microsoft, Apple, WhatsApp)'
-              }
-              aria-label="Minha Conta ou Fazer Login"
-            >
-              {isAuthenticated ? (
-                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white shrink-0">
-                  {user?.name.charAt(0).toUpperCase()}
-                </div>
-              ) : (
-                <User className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="hidden sm:inline">
-                {isAuthenticated ? user?.name.split(' ')[0] : 'Entrar'}
-              </span>
-              {isAuthenticated && (
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-              )}
-            </button>
-
+            {/* Botão Unificado: Menu & Minha Conta / Entrar */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setMenuOpen((prev) => !prev)}
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
-                aria-label="Abrir menu de navegação"
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                aria-label="Abrir menu de navegação e conta"
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition cursor-pointer shadow-sm ${
                   menuOpen
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                    ? 'border-primary bg-primary text-primary-foreground shadow-md'
+                    : isAuthenticated
+                    ? 'border-emerald-500/50 bg-emerald-500/10 text-foreground hover:bg-emerald-500/20'
                     : 'border-border bg-background/80 text-foreground hover:border-primary/60 hover:bg-background'
                 }`}
               >
-                {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                <span>Menu</span>
+                {menuOpen ? (
+                  <X className="h-4 w-4" />
+                ) : isAuthenticated ? (
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white shrink-0">
+                    {user?.name.charAt(0).toUpperCase()}
+                  </div>
+                ) : (
+                  <User className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                )}
+                <span>
+                  {isAuthenticated ? user?.name.split(' ')[0] : 'Entrar / Menu'}
+                </span>
+                <Menu className={`h-3.5 w-3.5 ${isAuthenticated ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`} />
               </button>
 
               {menuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-80 sm:w-96 max-h-[80vh] overflow-y-auto rounded-2xl border border-border bg-card/98 p-2.5 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95"
+                  className="absolute right-0 mt-2 w-80 sm:w-96 max-h-[80vh] overflow-y-auto rounded-2xl border border-border bg-card/98 p-2.5 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 space-y-2.5"
                 >
+                  {/* SEÇÃO 1 NO TOPO: MINHA CONTA OU ENTRAR */}
+                  <div>
+                    <div className="px-2 py-0.5 mb-1.5 flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary">
+                        Minha Conta
+                      </span>
+                      {isAuthenticated && (
+                        <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
+                          {user?.provider?.toUpperCase() || 'CONECTADO'}
+                        </span>
+                      )}
+                    </div>
+
+                    {isAuthenticated ? (
+                      <div className="rounded-xl bg-muted/40 p-2.5 space-y-2 border border-border/60">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0">
+                            <p className="text-xs font-extrabold text-foreground truncate">
+                              {user?.name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {user?.email || 'Conectado'}
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
+                            Ativo
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            signOut();
+                            setMenuOpen(false);
+                          }}
+                          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition cursor-pointer"
+                        >
+                          <LogOut className="h-3.5 w-3.5" />
+                          <span>Sair da conta</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setAuthModalOpen(true);
+                        }}
+                        className="w-full text-left flex items-center gap-3 rounded-xl p-2.5 bg-gradient-to-r from-emerald-500/10 to-primary/10 border border-emerald-500/30 hover:border-emerald-500/60 transition cursor-pointer shadow-sm group"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground group-hover:scale-105 transition shadow">
+                          <LogIn className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black truncate text-foreground">
+                            Entrar ou Criar Conta
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            Google, Microsoft, Apple ou E-mail
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-primary shrink-0" />
+                      </button>
+                    )}
+
+                    {/* Painel do Gestor (Exclusivo para Gestores Autorizados) */}
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                        className="mt-1.5 flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition hover:bg-purple-500/15 border border-purple-500/30 bg-purple-500/10 text-foreground"
+                      >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-white">
+                          <Settings className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black truncate flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
+                            Painel do Gestor
+                            <span className="rounded bg-purple-500/25 px-1 py-0.2 text-[9px] font-bold text-purple-800 dark:text-purple-200">
+                              ADM
+                            </span>
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            Controle de audiência, métricas e ajustes
+                          </p>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      </Link>
+                    )}
+                  </div>
+
+                  <div className="border-t border-border/70 pt-2" />
                   {/* Group 1: Programação por Data */}
                   <div className="px-2 py-1 flex items-center justify-between">
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-primary">
@@ -517,99 +587,6 @@ export function SiteHeader({
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       </button>
-                    )}
-
-                    {/* Group 3: Minha Conta & Autenticação */}
-                    <div className="mt-2.5 pt-2 border-t border-border/70 px-2 py-1">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                        Minha Conta
-                      </span>
-                    </div>
-
-                    {isAuthenticated ? (
-                      <div className="rounded-xl bg-muted/40 p-2.5 space-y-2 border border-border/60">
-                        <div className="flex items-center justify-between">
-                          <div className="min-w-0">
-                            <p className="text-xs font-extrabold text-foreground truncate">
-                              {user?.name}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground truncate">
-                              {user?.email || 'Conectado'} • {user?.provider.toUpperCase()}
-                            </p>
-                          </div>
-                          <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
-                            Ativo
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            signOut();
-                            setMenuOpen(false);
-                          }}
-                          className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/20 transition cursor-pointer"
-                        >
-                          <LogOut className="h-3.5 w-3.5" />
-                          <span>Sair da conta</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          setAuthModalOpen(true);
-                        }}
-                        className="w-full text-left flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent cursor-pointer"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/35 bg-primary/15 text-primary">
-                          <LogIn className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-extrabold truncate">
-                            Entrar ou Criar Conta
-                          </p>
-                          <p className="text-[11px] text-muted-foreground truncate">
-                            Google, Microsoft, Apple ou E-mail
-                          </p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                      </button>
-                    )}
-
-                    {/* Painel do Gestor (Aparece EXCLUSIVAMENTE para os gestores autenticados) */}
-                    {isAdmin && (
-                      <>
-                        <div className="mt-2.5 pt-2 border-t border-border/70 px-2 py-1">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                            Painel Administrativo
-                          </span>
-                        </div>
-
-                        <Link
-                          to="/admin"
-                          role="menuitem"
-                          onClick={() => setMenuOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent"
-                        >
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-purple-500/35 bg-purple-500/15 text-purple-600 dark:text-purple-400">
-                            <Settings className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-extrabold truncate flex items-center gap-1.5">
-                              Painel do Gestor
-                              <span className="rounded bg-primary/20 px-1 py-0.2 text-[9px] font-bold text-primary">
-                                ADM
-                              </span>
-                            </p>
-                            <p className="text-[11px] text-muted-foreground truncate">
-                              Controle de audiência e ajustes do site
-                            </p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                        </Link>
-                      </>
                     )}
                   </div>
                 </div>

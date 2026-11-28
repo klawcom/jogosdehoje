@@ -18,7 +18,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   announcement_text: '🔥 Acompanhe todos os lances, placares e gols ao vivo com transmissão na TV e streaming!',
   announcement_link: '',
   whatsapp_group_url: 'https://chat.whatsapp.com/',
-  custom_logo_url: '/logo.png?v=5',
+  custom_logo_url: '/logo.png?v=6',
 };
 
 const STORAGE_KEY = 'jogosdehoje_site_settings';

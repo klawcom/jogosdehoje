@@ -81,7 +81,7 @@ export const Route = createFileRoute("/")({
   errorComponent: () => (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
       <img
-        src="/logo.png?v=5"
+        src="/logo.png?v=6"
         alt="Logo Jogos ao Vivo"
         className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-1 ring-emerald-400/40 mb-3"
       />

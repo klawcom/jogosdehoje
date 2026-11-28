@@ -15,6 +15,9 @@ import {
   Lock,
   LogIn,
   User,
+  Volume2,
+  VolumeX,
+  Play,
 } from 'lucide-react';
 import {
   usePushNotifications,
@@ -23,6 +26,13 @@ import {
 import { TeamBadge } from './team-badge';
 import { useAuth } from '../lib/auth';
 import { AuthModal } from './auth-modal';
+import {
+  getWhistleVolume,
+  setWhistleVolume,
+  isWhistleEnabled,
+  setWhistleEnabled,
+  playRefereeWhistle,
+} from '../lib/whistle-audio';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -55,6 +65,11 @@ export function NotificationModal({
   const [testSent, setTestSent] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
+  // Som de Apito de Futebol (Personalizável, baixo por padrão em 25%)
+  const [whistleOn, setWhistleOn] = useState(() => isWhistleEnabled());
+  const [whistleVol, setWhistleVol] = useState(() => getWhistleVolume());
+  const [isPlayingWhistle, setIsPlayingWhistle] = useState(false);
+
   if (!isOpen) return null;
 
   const handleToggle = async () => {
@@ -69,9 +84,28 @@ export function NotificationModal({
 
   const handleTestNotification = async () => {
     setTestSent(true);
+    if (whistleOn) {
+      playRefereeWhistle(whistleVol);
+    }
     const sampleTeam = favorites.length > 0 ? favorites[0] : 'Flamengo';
     await sendLocalTestNotification(sampleTeam);
     setTimeout(() => setTestSent(false), 3000);
+  };
+
+  const handlePlayWhistleTest = async () => {
+    setIsPlayingWhistle(true);
+    await playRefereeWhistle(whistleVol);
+    setTimeout(() => setIsPlayingWhistle(false), 600);
+  };
+
+  const handleWhistleToggle = (enabled: boolean) => {
+    setWhistleOn(enabled);
+    setWhistleEnabled(enabled);
+  };
+
+  const handleWhistleVolumeChange = (vol: number) => {
+    setWhistleVol(vol);
+    setWhistleVolume(vol);
   };
 
   const prefItems: Array<{
@@ -417,6 +451,68 @@ export function NotificationModal({
                 );
               })}
             </div>
+          </div>
+
+          {/* SOM DO APITO CLÁSSICO DE ÁRBITRO DE FUTEBOL */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-card p-4 space-y-3.5 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  {whistleOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-foreground flex items-center gap-1.5">
+                    Som de Apito do Árbitro
+                    <span className="rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1.5 py-0.2 text-[9px] font-bold">
+                      Futebol
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground">
+                    Apito clássico de futebol ao receber notificações e gols
+                  </p>
+                </div>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={whistleOn}
+                  onChange={(e) => handleWhistleToggle(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500" />
+              </label>
+            </div>
+
+            {whistleOn && (
+              <div className="space-y-2 pt-2 border-t border-border/60">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-semibold">
+                    Volume: <strong className="text-foreground">{Math.round(whistleVol * 100)}%</strong> {whistleVol <= 0.3 ? '(Suave / Baixo)' : whistleVol <= 0.7 ? '(Médio)' : '(Alto)'}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handlePlayWhistleTest}
+                    disabled={isPlayingWhistle}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 text-[11px] font-extrabold hover:bg-emerald-500/25 transition cursor-pointer"
+                  >
+                    <Play className="h-3 w-3 fill-current" />
+                    <span>{isPlayingWhistle ? 'Tocando...' : 'Ouvir Apito'}</span>
+                  </button>
+                </div>
+
+                <input
+                  type="range"
+                  min="0.05"
+                  max="1"
+                  step="0.05"
+                  value={whistleVol}
+                  onChange={(e) => handleWhistleVolumeChange(parseFloat(e.target.value))}
+                  className="w-full accent-emerald-500 h-1.5 bg-muted rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            )}
           </div>
 
           {/* Botão de Teste no Celular */}

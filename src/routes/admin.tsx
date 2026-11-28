@@ -1160,7 +1160,7 @@ function AdminDashboardPage() {
 
                       <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=5' })}
+                        onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=6' })}
                         className="inline-flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground hover:text-foreground transition bg-muted/50 px-2.5 py-1 rounded-lg border border-border cursor-pointer self-start sm:self-auto"
                       >
                         <RotateCcw className="h-3 w-3" />
@@ -1176,15 +1176,15 @@ function AdminDashboardPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         {/* Preset 1: Oficial Novo */}
                         <div
-                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=5' })}
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.png?v=6' })}
                           className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
-                            formData.custom_logo_url === '/logo.png?v=5' || !formData.custom_logo_url
+                            formData.custom_logo_url === '/logo.png?v=6' || !formData.custom_logo_url
                               ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
                               : 'border-border bg-card/60 hover:bg-muted/50'
                           }`}
                         >
                           <img
-                            src="/logo.png?v=5"
+                            src="/logo.png?v=6"
                             alt="Gramado Oficial"
                             className="h-10 w-10 rounded-xl object-cover ring-1 ring-emerald-500/30 shrink-0"
                           />
@@ -1203,15 +1203,15 @@ function AdminDashboardPage() {
 
                         {/* Preset 2: Bola Clássica */}
                         <div
-                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.jpg?v=5' })}
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/logo.jpg?v=6' })}
                           className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
-                            formData.custom_logo_url === '/logo.jpg?v=5'
+                            formData.custom_logo_url === '/logo.jpg?v=6'
                               ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
                               : 'border-border bg-card/60 hover:bg-muted/50'
                           }`}
                         >
                           <img
-                            src="/logo.jpg?v=5"
+                            src="/logo.jpg?v=6"
                             alt="Bola Clássica P&B"
                             className="h-10 w-10 rounded-xl object-cover ring-1 ring-primary/30 shrink-0"
                           />
@@ -1227,15 +1227,15 @@ function AdminDashboardPage() {
 
                         {/* Preset 3: App PWA Icon */}
                         <div
-                          onClick={() => setFormData({ ...formData, custom_logo_url: '/icon-192.png?v=5' })}
+                          onClick={() => setFormData({ ...formData, custom_logo_url: '/icon-192.png?v=6' })}
                           className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition ${
-                            formData.custom_logo_url === '/icon-192.png?v=5'
+                            formData.custom_logo_url === '/icon-192.png?v=6'
                               ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30 shadow-sm'
                               : 'border-border bg-card/60 hover:bg-muted/50'
                           }`}
                         >
                           <img
-                            src="/icon-192.png?v=5"
+                            src="/icon-192.png?v=6"
                             alt="Ícone de App"
                             className="h-10 w-10 rounded-xl object-cover ring-1 ring-primary/30 shrink-0"
                           />
@@ -1302,7 +1302,7 @@ function AdminDashboardPage() {
                           type="text"
                           value={formData.custom_logo_url}
                           onChange={(e) => setFormData({ ...formData, custom_logo_url: e.target.value })}
-                          placeholder="/logo.png?v=5 ou https://..."
+                          placeholder="/logo.png?v=6 ou https://..."
                           className="w-full rounded-xl border border-border bg-background py-2 px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                         />
                       </div>
@@ -1319,7 +1319,7 @@ function AdminDashboardPage() {
                         {/* Preview 1: No Cabeçalho */}
                         <div className="rounded-xl border border-border/60 bg-card p-2.5 flex items-center gap-2.5 shadow-sm">
                           <img
-                            src={formData.custom_logo_url || '/logo.png?v=5'}
+                            src={formData.custom_logo_url || '/logo.png?v=6'}
                             alt="Prévia Cabeçalho"
                             className="h-9 w-9 rounded-xl object-cover ring-1 ring-emerald-500/40 shadow shrink-0"
                           />
@@ -1333,7 +1333,7 @@ function AdminDashboardPage() {
                         <div className="rounded-xl border border-border/60 bg-card p-2.5 flex items-center gap-2.5 shadow-sm">
                           <div className="relative">
                             <img
-                              src={formData.custom_logo_url || '/logo.png?v=5'}
+                              src={formData.custom_logo_url || '/logo.png?v=6'}
                               alt="Prévia PWA"
                               className="h-10 w-10 rounded-2xl object-cover shadow-md ring-2 ring-emerald-500/50 shrink-0"
                             />
@@ -1350,7 +1350,7 @@ function AdminDashboardPage() {
                         {/* Preview 3: Aba Favicon */}
                         <div className="rounded-xl border border-border/60 bg-muted/60 p-2.5 flex items-center gap-2 shadow-sm">
                           <img
-                            src={formData.custom_logo_url || '/logo.png?v=5'}
+                            src={formData.custom_logo_url || '/logo.png?v=6'}
                             alt="Prévia Favicon"
                             className="h-5 w-5 rounded-md object-cover shrink-0"
                           />
