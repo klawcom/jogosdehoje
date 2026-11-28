@@ -143,3 +143,61 @@ CREATE POLICY "Acesso a inscrições push" ON push_subscriptions
 CREATE POLICY "Acesso a logs de notificações" ON sent_notifications_log
   FOR ALL USING (true) WITH CHECK (true);
 
+-- ==============================================================================
+-- 6. ANALYTICS, AUDIÊNCIA E INTERATIVIDADE
+-- ==============================================================================
+
+-- Tabela de Visitas e Acessos ao Site (Dia, Semana, Mês)
+CREATE TABLE IF NOT EXISTS site_visits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  visitor_id TEXT NOT NULL,
+  page TEXT NOT NULL DEFAULT '/',
+  user_agent TEXT,
+  referrer TEXT,
+  visited_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_visits_visited_at ON site_visits (visited_at DESC);
+CREATE INDEX IF NOT EXISTS idx_site_visits_visitor_id ON site_visits (visitor_id);
+
+-- Tabela de Interações e Alertas Criados
+CREATE TABLE IF NOT EXISTS site_interactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  interaction_type TEXT NOT NULL, -- 'favorite_team', 'favorite_championship', 'match_alert', 'like', 'share_whatsapp', 'calendar_add'
+  target_id TEXT,
+  visitor_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_interactions_type ON site_interactions (interaction_type);
+CREATE INDEX IF NOT EXISTS idx_interactions_created_at ON site_interactions (created_at DESC);
+
+-- ==============================================================================
+-- 7. CONFIGURAÇÕES E AJUSTES DO GESTOR (PAINEL ADMIN)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS site_settings (
+  key TEXT PRIMARY KEY,
+  site_title TEXT NOT NULL DEFAULT 'Jogos ao Vivo',
+  site_tagline TEXT NOT NULL DEFAULT 'Onde assistir futebol na TV e streaming com placar e alertas em tempo real',
+  announcement_enabled BOOLEAN NOT NULL DEFAULT false,
+  announcement_text TEXT DEFAULT '',
+  announcement_link TEXT DEFAULT '',
+  whatsapp_group_url TEXT DEFAULT '',
+  custom_logo_url TEXT DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE site_visits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Acesso a visitas" ON site_visits FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso a interacoes" ON site_interactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso a configuracoes" ON site_settings FOR ALL USING (true) WITH CHECK (true);
+
+-- Inserir configuração padrão inicial
+INSERT INTO site_settings (key, site_title, site_tagline)
+VALUES ('general', 'Jogos ao Vivo', 'Onde assistir futebol na TV e streaming com placar e alertas em tempo real')
+ON CONFLICT (key) DO NOTHING;
+
+

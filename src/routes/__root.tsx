@@ -4,6 +4,8 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import { PwaInstallBanner } from "../components/pwa-install-banner";
 import { registerServiceWorker } from "../lib/push-notifications";
+import { useSiteSettings } from "../lib/settings";
+import { Sparkles, Megaphone } from "lucide-react";
 
 function NotFoundComponent() {
   return (
@@ -19,7 +21,7 @@ function NotFoundComponent() {
             to="/"
             className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
           >
-            Voltar aos Jogos de Hoje
+            Voltar aos Jogos ao Vivo
           </Link>
         </div>
       </div>
@@ -35,26 +37,42 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#061c12" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Jogos de Hoje" },
+      { name: "apple-mobile-web-app-title", content: "Jogos ao Vivo" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { name: "application-name", content: "Jogos de Hoje" },
-      { title: "Jogos de Hoje — Futebol na TV e Streaming" },
-      { name: "description", content: "Confira todos os jogos de futebol de hoje com horários de Brasília e onde assistir na TV aberta, TV fechada e streaming." },
-      { property: "og:title", content: "Jogos de Hoje — Futebol na TV e Streaming" },
-      { property: "og:description", content: "Programação completa dos jogos de hoje no horário de Brasília com canais de transmissão." },
+      { name: "application-name", content: "Jogos ao Vivo" },
+      { title: "Jogos ao Vivo — Futebol na TV, Streaming, Placar e Gols em Tempo Real" },
+      {
+        name: "description",
+        content:
+          "Não perca nenhum lance! Acompanhe jogos de futebol ao vivo hoje, onde assistir na TV e Streaming, placar e gols em tempo real, escalações oficiais e alertas no celular.",
+      },
+      {
+        name: "keywords",
+        content:
+          "jogos ao vivo, futebol ao vivo hoje, onde assistir futebol ao vivo, placar ao vivo, jogos na tv, escalacao oficial, gols ao vivo, campeonato brasileiro ao vivo, champions league ao vivo, libertadores ao vivo, futebol online grátis",
+      },
+      { property: "og:title", content: "Jogos ao Vivo — Futebol na TV, Streaming, Placar e Gols em Tempo Real" },
+      {
+        property: "og:description",
+        content:
+          "Não perca nenhum lance! Acompanhe jogos de futebol ao vivo hoje, onde assistir na TV e Streaming, placar e gols em tempo real e alertas no celular.",
+      },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: "/logo.png?v=3" },
+      { property: "og:image", content: "/logo.png?v=4" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Jogos de Hoje" },
-      { name: "twitter:description", content: "Horários e onde assistir aos jogos de futebol de hoje." },
-      { name: "twitter:image", content: "/logo.png?v=3" },
+      { name: "twitter:title", content: "Jogos ao Vivo — Futebol na TV e Streaming" },
+      {
+        name: "twitter:description",
+        content: "Acompanhe jogos de futebol ao vivo hoje, placar em tempo real e onde assistir na TV e streaming.",
+      },
+      { name: "twitter:image", content: "/logo.png?v=4" },
     ],
     links: [
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "icon", type: "image/x-icon", href: "/favicon.ico?v=3" },
-      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png?v=3" },
-      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png?v=3" },
-      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=3" },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico?v=4" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png?v=4" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png?v=4" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png?v=4" },
       {
         rel: "stylesheet",
         href: appCss,
@@ -112,6 +130,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  const { settings } = useSiteSettings();
+
   // Inicialização do Service Worker para PWA e Push Notifications
   useEffect(() => {
     registerServiceWorker();
@@ -144,6 +164,25 @@ function RootComponent() {
 
   return (
     <>
+      {/* Banner de Aviso Global configurado pelo Gestor no Painel */}
+      {settings.announcement_enabled && settings.announcement_text && (
+        <div className="relative z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 px-4 py-2 text-white shadow-md">
+          <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 text-center text-xs font-bold sm:text-sm">
+            <Megaphone className="h-4 w-4 shrink-0 animate-bounce" />
+            <span>{settings.announcement_text}</span>
+            {settings.whatsapp_group_url && (
+              <a
+                href={settings.whatsapp_group_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-extrabold hover:bg-white/30 transition-colors"
+              >
+                Participe agora →
+              </a>
+            )}
+          </div>
+        </div>
+      )}
       <Outlet />
       <PwaInstallBanner />
     </>

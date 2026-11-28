@@ -42,6 +42,7 @@ import { FloatingWhatsAppButton } from '../components/floating-whatsapp-button';
 import { FavoritesModal } from '../components/favorites-modal';
 import { NotificationModal } from '../components/notification-modal';
 import { usePushNotifications } from '../lib/push-notifications';
+import { trackVisit } from '../lib/analytics';
 
 type MobileSectionTab = 'classificacao' | 'estatisticas';
 type StatCategoryTab = 'goals' | 'assists' | 'yellow' | 'red' | 'clubs';
@@ -83,15 +84,20 @@ export const Route = createFileRoute('/brasileirao')({
     meta: [
       {
         title:
-          'Brasileirão Série A — Classificação e Estatísticas Atualizadas | Jogos de Hoje',
+          'Brasileirão Série A Ao Vivo — Classificação e Estatísticas Atualizadas | Jogos ao Vivo',
       },
       {
         name: 'description',
         content:
-          'Confira a tabela de classificação e estatísticas completas do Brasileirão Série A atualizadas automaticamente: pontos, G-4, Z-4, artilharia, assistências, cartões e melhores ataques e defesas.',
+          'Confira a tabela de classificação e estatísticas completas do Brasileirão Série A ao vivo: pontuação em tempo real, G-4, Z-4, artilharia, assistências, cartões e melhores ataques e defesas.',
       },
-      { property: 'og:title', content: 'Brasileirão Série A — Classificação e Estatísticas Atualizadas | Jogos de Hoje' },
-      { property: 'og:description', content: 'Classificação, artilharia, assistências e estatísticas atualizadas do Brasileirão Série A.' },
+      {
+        name: 'keywords',
+        content:
+          'brasileirao serie a ao vivo, tabela brasileirao serie a, classificacao brasileirao, artilharia brasileirao, jogos ao vivo, g4 serie a, z4 serie a',
+      },
+      { property: 'og:title', content: 'Brasileirão Série A Ao Vivo — Classificação e Estatísticas Atualizadas | Jogos ao Vivo' },
+      { property: 'og:description', content: 'Classificação, artilharia, assistências e estatísticas atualizadas do Brasileirão Série A ao vivo.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
@@ -175,6 +181,11 @@ function BrasileiraoTabelaPage() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
+
+  // Registrar visita de página para dashboard analítico do gestor
+  useEffect(() => {
+    trackVisit('/brasileirao');
+  }, []);
   const {
     favorites,
     toggleFavorite,

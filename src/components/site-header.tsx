@@ -13,9 +13,11 @@ import {
   ChevronRight,
   Bell,
   BellRing,
+  Settings,
 } from 'lucide-react';
 import { DaySchedule } from '../lib/types';
 import { getBrasiliaDateString } from '../lib/scraper';
+import { useSiteSettings } from '../lib/settings';
 
 export type ActiveSitePage = 'matches' | 'brasileirao';
 
@@ -104,6 +106,7 @@ export function SiteHeader({
   selectedDate,
   onSelectDate,
 }: SiteHeaderProps) {
+  const { settings } = useSiteSettings();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
 
@@ -159,14 +162,18 @@ export function SiteHeader({
           {/* Brand + Live Timestamp */}
           <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
             <img
-              src="/logo.png?v=3"
-              alt="Logo Jogos de Hoje"
+              src={settings.custom_logo_url || '/logo.png?v=4'}
+              alt={settings.site_title || 'Logo Jogos ao Vivo'}
               className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_0_16px_rgba(16,185,129,0.4)] ring-1 ring-emerald-400/60 group-hover:scale-105 transition-transform"
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground truncate">
-                  Jogos <span className="text-primary font-black">de Hoje</span>
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-foreground truncate flex items-center gap-1.5">
+                  Jogos <span className="text-primary font-black">ao Vivo</span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600" />
+                  </span>
                 </h1>
                 <span className="hidden xl:inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/35 shrink-0">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
@@ -467,6 +474,36 @@ export function SiteHeader({
                         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       </button>
                     )}
+
+                    {/* Group 3: Administração e Gestão do Site */}
+                    <div className="mt-2.5 pt-2 border-t border-border/70 px-2 py-1">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                        Painel Administrativo
+                      </span>
+                    </div>
+
+                    <Link
+                      to="/admin"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-purple-500/35 bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                        <Settings className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-extrabold truncate flex items-center gap-1.5">
+                          Painel do Gestor
+                          <span className="rounded bg-primary/20 px-1 py-0.2 text-[9px] font-bold text-primary">
+                            ADM
+                          </span>
+                        </p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          Audiência, métricas e personalização do site
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                    </Link>
                   </div>
                 </div>
               )}

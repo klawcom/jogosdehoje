@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BrasileiraoRouteImport } from './routes/brasileirao'
 import { Route as EstatisticasRouteImport } from './routes/estatisticas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrasileiraoRoute = BrasileiraoRouteImport.update({
@@ -31,30 +37,34 @@ const EstatisticasRoute = EstatisticasRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/brasileirao': typeof BrasileiraoRoute
   '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/brasileirao': typeof BrasileiraoRoute
   '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/brasileirao': typeof BrasileiraoRoute
   '/estatisticas': typeof EstatisticasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/brasileirao' | '/estatisticas'
+  fullPaths: '/' | '/admin' | '/brasileirao' | '/estatisticas'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/brasileirao' | '/estatisticas'
-  id: '__root__' | '/' | '/brasileirao' | '/estatisticas'
+  to: '/' | '/admin' | '/brasileirao' | '/estatisticas'
+  id: '__root__' | '/' | '/admin' | '/brasileirao' | '/estatisticas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   BrasileiraoRoute: typeof BrasileiraoRoute
   EstatisticasRoute: typeof EstatisticasRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brasileirao': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   BrasileiraoRoute: BrasileiraoRoute,
   EstatisticasRoute: EstatisticasRoute,
 }

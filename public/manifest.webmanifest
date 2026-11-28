@@ -1,7 +1,7 @@
 {
-  "name": "Jogos de Hoje — Futebol na TV e Streaming",
-  "short_name": "Jogos de Hoje",
-  "description": "Programação completa de futebol na TV e streaming com horários de Brasília e alertas de jogos e gols no celular.",
+  "name": "Jogos ao Vivo — Futebol na TV e Streaming",
+  "short_name": "Jogos ao Vivo",
+  "description": "Não perca nenhum lance! Acompanhe futebol ao vivo hoje, programação completa de TV e streaming com horários de Brasília, placar em tempo real e alertas no celular.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

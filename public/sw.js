@@ -39,12 +39,12 @@ self.addEventListener('activate', (event) => {
 // Manipulação de Notificações Push (recebidas via servidor mesmo com o app/navegador fechado)
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'Jogos de Hoje ⚽',
-    body: 'Novo alerta de jogo para você!',
+    title: 'Jogos ao Vivo ⚽',
+    body: 'Novo alerta de futebol ao vivo para você!',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     url: '/',
-    tag: 'jogosdehoje-alert',
+    tag: 'jogosaovivo-alert',
   };
 
   if (event.data) {
@@ -61,7 +61,7 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/icon-192.png',
     badge: data.badge || '/icon-192.png',
     image: data.image || undefined,
-    tag: data.tag || 'jogosdehoje-match-alert',
+    tag: data.tag || 'jogosaovivo-match-alert',
     renotify: true,
     vibrate: [200, 100, 200, 100, 300],
     data: {

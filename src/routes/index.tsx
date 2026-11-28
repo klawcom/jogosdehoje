@@ -43,6 +43,7 @@ import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
 import { useTheme } from "../lib/theme";
 import { enrichMatchesWithScores } from "../lib/live-scores";
+import { trackVisit } from "../lib/analytics";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
@@ -77,13 +78,13 @@ export const Route = createFileRoute("/")({
   errorComponent: () => (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
       <img
-        src="/logo.png"
-        alt="Logo Jogos de Hoje"
+        src="/logo.png?v=4"
+        alt="Logo Jogos ao Vivo"
         className="h-14 w-14 rounded-2xl object-cover shadow-lg ring-1 ring-emerald-400/40 mb-3"
       />
-      <h2 className="text-lg font-black text-foreground mb-1">Jogos de Hoje</h2>
+      <h2 className="text-lg font-black text-foreground mb-1">Jogos ao Vivo</h2>
       <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-        Atualizando programação de TV e placares...
+        Atualizando programação de TV e placares em tempo real...
       </p>
       <button
         type="button"
@@ -96,14 +97,22 @@ export const Route = createFileRoute("/")({
   ),
   head: () => ({
     meta: [
-      { title: "Jogos de Hoje — Futebol na TV, Horários e Onde Assistir" },
+      { title: "Jogos ao Vivo — Futebol na TV, Streaming, Placar e Gols em Tempo Real" },
       {
         name: "description",
         content:
-          "Confira todos os jogos de futebol de hoje por horário de Brasília, com canais de TV aberta, TV fechada e streaming.",
+          "Não perca nenhum lance! Acompanhe jogos de futebol ao vivo hoje, onde assistir na TV e Streaming, placar e gols em tempo real, escalações oficiais e alertas no celular.",
       },
-      { property: 'og:title', content: 'Jogos de Hoje — Futebol na TV, Horários e Onde Assistir' },
-      { property: 'og:description', content: 'Confira jogos, horários de Brasília e canais de transmissão.' },
+      {
+        name: "keywords",
+        content:
+          "jogos ao vivo, futebol ao vivo hoje, onde assistir futebol ao vivo, placar ao vivo, jogos na tv, escalacao oficial, gols ao vivo, campeonato brasileiro ao vivo, libertadores ao vivo, champions league ao vivo",
+      },
+      { property: 'og:title', content: 'Jogos ao Vivo — Futebol na TV, Streaming, Placar e Gols em Tempo Real' },
+      {
+        property: 'og:description',
+        content: 'Confira todos os jogos de futebol ao vivo hoje, horários de Brasília, canais de TV e streaming e placar em tempo real.',
+      },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
@@ -251,6 +260,11 @@ function JogosDeHoje() {
   } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
   const { isSubscribed: isNotificationsActive } = usePushNotifications();
+
+  // Registrar visita de página para dashboard analítico do gestor
+  useEffect(() => {
+    trackVisit('/');
+  }, []);
 
   useEffect(() => {
     if (searchParams?.live === "true") {

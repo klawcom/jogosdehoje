@@ -173,6 +173,93 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_visits: {
+        Row: {
+          id: string;
+          visitor_id: string;
+          page: string;
+          user_agent: string | null;
+          referrer: string | null;
+          visited_at: string;
+        };
+        Insert: {
+          id?: string;
+          visitor_id: string;
+          page?: string;
+          user_agent?: string | null;
+          referrer?: string | null;
+          visited_at?: string;
+        };
+        Update: {
+          id?: string;
+          visitor_id?: string;
+          page?: string;
+          user_agent?: string | null;
+          referrer?: string | null;
+          visited_at?: string;
+        };
+        Relationships: [];
+      };
+      site_interactions: {
+        Row: {
+          id: string;
+          interaction_type: string;
+          target_id: string | null;
+          visitor_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          interaction_type: string;
+          target_id?: string | null;
+          visitor_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          interaction_type?: string;
+          target_id?: string | null;
+          visitor_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      site_settings: {
+        Row: {
+          key: string;
+          site_title: string;
+          site_tagline: string;
+          announcement_enabled: boolean;
+          announcement_text: string | null;
+          announcement_link: string | null;
+          whatsapp_group_url: string | null;
+          custom_logo_url: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          site_title?: string;
+          site_tagline?: string;
+          announcement_enabled?: boolean;
+          announcement_text?: string | null;
+          announcement_link?: string | null;
+          whatsapp_group_url?: string | null;
+          custom_logo_url?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          key?: string;
+          site_title?: string;
+          site_tagline?: string;
+          announcement_enabled?: boolean;
+          announcement_text?: string | null;
+          announcement_link?: string | null;
+          whatsapp_group_url?: string | null;
+          custom_logo_url?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     }
     Views: {
       [_ in never]: never
