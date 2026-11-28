@@ -12,6 +12,7 @@ import {
 import {
   UserProfile,
   signInWithSocial,
+  loginWithEmail,
   sendEmailOtp,
   verifyEmailOtp,
 } from '../lib/auth';
@@ -24,7 +25,7 @@ interface AuthModalProps {
   subtitle?: string;
 }
 
-type AuthStep = 'methods' | 'email-input' | 'email-verify';
+type AuthStep = 'methods' | 'social-input' | 'email-input';
 
 export function AuthModal({
   isOpen,
@@ -34,8 +35,8 @@ export function AuthModal({
   subtitle = 'Acesse para receber alertas e notificações de gols, partidas e escalações no celular.',
 }: AuthModalProps) {
   const [step, setStep] = useState<AuthStep>('methods');
+  const [selectedProvider, setSelectedProvider] = useState<'google' | 'microsoft' | 'apple'>('google');
   const [emailInput, setEmailInput] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,8 +44,8 @@ export function AuthModal({
 
   const resetState = () => {
     setStep('methods');
+    setSelectedProvider('google');
     setEmailInput('');
-    setOtpCode('');
     setFeedback(null);
     setIsLoading(false);
   };
@@ -54,26 +55,45 @@ export function AuthModal({
     onClose();
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'microsoft' | 'apple') => {
+  const handleSelectSocial = (provider: 'google' | 'microsoft' | 'apple') => {
+    setSelectedProvider(provider);
+    setStep('social-input');
+    setEmailInput('');
+    setFeedback(null);
+  };
+
+  const handleConfirmSocialLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = emailInput.trim();
+    if (!clean || !clean.includes('@') || !clean.includes('.')) {
+      setFeedback({ type: 'error', text: 'Por favor, digite um endereço de e-mail válido.' });
+      return;
+    }
+
     setIsLoading(true);
     setFeedback(null);
     try {
-      const res = await signInWithSocial(provider);
-      if (res.success) {
-        setFeedback({ type: 'info', text: res.message });
+      const res = await signInWithSocial(selectedProvider, clean);
+      if (res.success && res.user) {
+        setFeedback({ type: 'success', text: `Conectado com sucesso com ${clean}!` });
+        setTimeout(() => {
+          onSuccess?.(res.user!);
+          handleClose();
+        }, 600);
       } else {
         setFeedback({ type: 'error', text: res.message });
       }
     } catch {
-      setFeedback({ type: 'error', text: 'Não foi possível conectar. Tente com outro método.' });
+      setFeedback({ type: 'error', text: 'Não foi possível conectar. Tente novamente.' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSendEmail = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailInput.trim() || !emailInput.includes('@')) {
+    const clean = emailInput.trim();
+    if (!clean || !clean.includes('@') || !clean.includes('.')) {
       setFeedback({ type: 'error', text: 'Digite um endereço de e-mail válido.' });
       return;
     }
@@ -81,42 +101,18 @@ export function AuthModal({
     setIsLoading(true);
     setFeedback(null);
     try {
-      const res = await sendEmailOtp(emailInput);
-      if (res.success) {
-        setStep('email-verify');
-        setFeedback({ type: 'success', text: res.message });
-      } else {
-        setFeedback({ type: 'error', text: res.message });
-      }
-    } catch {
-      setFeedback({ type: 'error', text: 'Falha no envio do e-mail. Tente novamente.' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otpCode.trim().length < 6) {
-      setFeedback({ type: 'error', text: 'Digite o código de 6 dígitos enviado ao seu e-mail.' });
-      return;
-    }
-
-    setIsLoading(true);
-    setFeedback(null);
-    try {
-      const res = await verifyEmailOtp(emailInput, otpCode);
+      const res = await loginWithEmail(clean);
       if (res.success && res.user) {
-        setFeedback({ type: 'success', text: 'Login confirmado com sucesso!' });
+        setFeedback({ type: 'success', text: 'Login realizado com sucesso!' });
         setTimeout(() => {
           onSuccess?.(res.user!);
           handleClose();
-        }, 1000);
+        }, 600);
       } else {
         setFeedback({ type: 'error', text: res.message });
       }
     } catch {
-      setFeedback({ type: 'error', text: 'Código inválido ou expirado.' });
+      setFeedback({ type: 'error', text: 'Falha no login por e-mail. Tente novamente.' });
     } finally {
       setIsLoading(false);
     }
@@ -149,10 +145,18 @@ export function AuthModal({
             <Lock className="h-5 w-5" />
           </div>
           <h3 className="text-base sm:text-lg font-black text-foreground tracking-tight">
-            {title}
+            {step === 'social-input'
+              ? `Conectar com ${selectedProvider.toUpperCase()}`
+              : step === 'email-input'
+              ? 'Acesso com E-mail'
+              : title}
           </h3>
           <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-            {subtitle}
+            {step === 'social-input'
+              ? `Informe sua conta ${selectedProvider.toUpperCase()} para salvar suas preferências de alertas.`
+              : step === 'email-input'
+              ? 'Informe seu e-mail para ativar notificações no celular.'
+              : subtitle}
           </p>
         </div>
 
@@ -181,7 +185,7 @@ export function AuthModal({
               {/* Google */}
               <button
                 type="button"
-                onClick={() => handleSocialLogin('google')}
+                onClick={() => handleSelectSocial('google')}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
               >
@@ -209,7 +213,7 @@ export function AuthModal({
               {/* Apple */}
               <button
                 type="button"
-                onClick={() => handleSocialLogin('apple')}
+                onClick={() => handleSelectSocial('apple')}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
               >
@@ -222,7 +226,7 @@ export function AuthModal({
               {/* Microsoft */}
               <button
                 type="button"
-                onClick={() => handleSocialLogin('microsoft')}
+                onClick={() => handleSelectSocial('microsoft')}
                 disabled={isLoading}
                 className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
               >
@@ -248,12 +252,13 @@ export function AuthModal({
               type="button"
               onClick={() => {
                 setStep('email-input');
+                setEmailInput('');
                 setFeedback(null);
               }}
               className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/60 hover:bg-muted py-2.5 px-4 text-xs font-bold text-foreground transition cursor-pointer"
             >
               <Mail className="h-4 w-4 text-primary" />
-              <span>Entrar com Código por E-mail</span>
+              <span>Entrar com Endereço de E-mail</span>
             </button>
 
             <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1.5 pt-1">
@@ -263,9 +268,58 @@ export function AuthModal({
           </div>
         )}
 
-        {/* STEP 2: Input Email */}
+        {/* STEP 2: Social Account Input */}
+        {step === 'social-input' && (
+          <form onSubmit={handleConfirmSocialLogin} className="space-y-3.5">
+            <button
+              type="button"
+              onClick={() => {
+                setStep('methods');
+                setFeedback(null);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Voltar às opções
+            </button>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                Digite sua conta {selectedProvider === 'google' ? 'Google (@gmail.com)' : selectedProvider === 'apple' ? 'Apple (ID Apple)' : 'Microsoft (@outlook/@hotmail)'}
+              </label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder={
+                  selectedProvider === 'google'
+                    ? 'exemplo@gmail.com'
+                    : selectedProvider === 'apple'
+                    ? 'exemplo@icloud.com'
+                    : 'exemplo@outlook.com'
+                }
+                className="w-full rounded-2xl border border-border bg-background py-3 px-4 text-xs font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                autoFocus
+                required
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Seus alertas e notificações ficarão vinculados a esta conta.
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              <span>Conectar com {selectedProvider.toUpperCase()}</span>
+            </button>
+          </form>
+        )}
+
+        {/* STEP 3: Email Direct Login */}
         {step === 'email-input' && (
-          <form onSubmit={handleSendEmail} className="space-y-3.5">
+          <form onSubmit={handleEmailLogin} className="space-y-3.5">
             <button
               type="button"
               onClick={() => {
@@ -292,7 +346,7 @@ export function AuthModal({
                 required
               />
               <p className="text-[11px] text-muted-foreground">
-                Enviaremos um código oficial para confirmar seu acesso.
+                Acesse imediatamente sem senhas ou códigos complicados.
               </p>
             </div>
 
@@ -302,62 +356,8 @@ export function AuthModal({
               className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-              <span>Enviar Código por E-mail</span>
+              <span>Acessar com este E-mail</span>
             </button>
-          </form>
-        )}
-
-        {/* STEP 3: Verify OTP Code */}
-        {step === 'email-verify' && (
-          <form onSubmit={handleVerifyOtp} className="space-y-3.5">
-            <button
-              type="button"
-              onClick={() => {
-                setStep('email-input');
-                setFeedback(null);
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Trocar e-mail
-            </button>
-
-            <div className="space-y-2 text-center">
-              <p className="text-xs text-foreground font-semibold">
-                Digite o código de 6 dígitos enviado para:
-              </p>
-              <p className="text-xs font-black text-primary truncate">{emailInput}</p>
-
-              <input
-                type="text"
-                maxLength={6}
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="w-full text-center tracking-[0.4em] text-2xl font-black rounded-2xl border border-border bg-background py-3.5 px-4 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                autoFocus
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || otpCode.length < 6}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              <span>Confirmar Código</span>
-            </button>
-
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={handleSendEmail}
-                disabled={isLoading}
-                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
-              >
-                Não recebeu? <span className="text-primary font-bold">Reenviar código</span>
-              </button>
-            </div>
           </form>
         )}
       </div>

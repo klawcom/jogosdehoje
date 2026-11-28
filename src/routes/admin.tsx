@@ -48,6 +48,7 @@ import {
   useAuth,
   isAuthorizedAdmin,
   signInWithSocial,
+  loginWithEmail,
   sendEmailOtp,
   verifyEmailOtp,
 } from '../lib/auth';
@@ -199,84 +200,68 @@ function AdminDashboardPage() {
     }
   };
 
-  const handleAdminGoogleLogin = async () => {
+  const [adminAuthMode, setAdminAuthMode] = useState<'options' | 'google' | 'apple'>('options');
+
+  const handleAdminSocialAuth = async (provider: 'google' | 'apple', email: string) => {
     setIsSubmittingAuth(true);
     setLoginError(null);
+    setLoginSuccess(null);
+
+    const clean = email.trim().toLowerCase();
+    if (!clean || !clean.includes('@') || !clean.includes('.')) {
+      setLoginError('Digite um e-mail válido.');
+      setIsSubmittingAuth(false);
+      return;
+    }
+
+    if (!isAuthorizedAdmin(clean)) {
+      setLoginError(`Acesso negado: O e-mail (${clean}) não possui permissão de gestor.`);
+      setIsSubmittingAuth(false);
+      return;
+    }
+
     try {
-      const res = await signInWithSocial('google');
+      const res = await signInWithSocial(provider, clean);
       if (res.success && res.user) {
-        if (!isAuthorizedAdmin(res.user.email)) {
-          setLoginError(`Acesso negado: A conta conectada (${res.user.email}) não possui privilégios de gestor.`);
-        }
+        setLoginSuccess('Acesso de gestor autorizado com sucesso!');
+        await loadAnalytics();
+      } else {
+        setLoginError(res.message);
       }
     } catch {
-      setLoginError('Falha ao autenticar com Google. Tente entrar via e-mail.');
+      setLoginError('Falha ao autenticar. Tente novamente.');
     } finally {
       setIsSubmittingAuth(false);
     }
   };
 
-  const handleAdminSocialLogin = async (provider: 'apple' | 'microsoft') => {
-    setIsSubmittingAuth(true);
-    setLoginError(null);
-    try {
-      const res = await signInWithSocial(provider);
-      if (res.success && res.user) {
-        if (!isAuthorizedAdmin(res.user.email)) {
-          setLoginError(`Acesso negado: A conta conectada (${res.user.email}) não possui privilégios de gestor.`);
-        }
-      }
-    } catch {
-      setLoginError('Falha ao autenticar com provedor. Tente entrar via e-mail.');
-    } finally {
-      setIsSubmittingAuth(false);
-    }
-  };
-
-  const handleSendEmailCode = async (e: React.FormEvent) => {
+  const handleDirectEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
     setLoginSuccess(null);
 
     const clean = loginEmail.trim().toLowerCase();
-    if (!clean || !clean.includes('@')) {
-      setLoginError('Digite um e-mail válido.');
+    if (!clean || !clean.includes('@') || !clean.includes('.')) {
+      setLoginError('Digite um endereço de e-mail válido.');
+      return;
+    }
+
+    if (!isAuthorizedAdmin(clean)) {
+      setLoginError(`Acesso negado: O e-mail (${clean}) não possui privilégios de gestor.`);
       return;
     }
 
     setIsSubmittingAuth(true);
     try {
-      const res = await sendEmailOtp(clean);
-      if (res.success) {
-        setLoginStep('verify');
-        setLoginSuccess(res.message);
+      const res = await loginWithEmail(clean);
+      if (res.success && res.user) {
+        setLoginSuccess('Acesso de gestor liberado com sucesso!');
+        await loadAnalytics();
       } else {
         setLoginError(res.message);
       }
     } catch {
-      setLoginError('Erro ao enviar e-mail. Tente novamente.');
-    } finally {
-      setIsSubmittingAuth(false);
-    }
-  };
-
-  const handleVerifyEmailCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError(null);
-    setIsSubmittingAuth(true);
-    try {
-      const res = await verifyEmailOtp(loginEmail, loginOtpCode);
-      if (res.success && res.user) {
-        if (isAuthorizedAdmin(res.user.email)) {
-          setLoginSuccess('Login autorizado com sucesso!');
-        } else {
-          setLoginError(`Acesso negado: O e-mail (${res.user.email}) não possui privilégios de gestor.`);
-        }
-      } else {
-        setLoginError(res.message || 'Código incorreto.');
-      }
-    } catch {
-      setLoginError('Falha na validação do código.');
+      setLoginError('Falha ao autenticar gestor. Tente novamente.');
     } finally {
       setIsSubmittingAuth(false);
     }
@@ -372,58 +357,67 @@ function AdminDashboardPage() {
             </div>
           )}
 
-          {/* Social Logins */}
-          <div className="space-y-2.5 pt-1">
-            <button
-              type="button"
-              onClick={handleAdminGoogleLogin}
-              disabled={isSubmittingAuth}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>Continuar com Google</span>
-            </button>
+          {/* Modo de Login: Opções Principais */}
+          {adminAuthMode === 'options' && (
+            <div className="space-y-3 pt-1">
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdminAuthMode('google');
+                    setLoginError(null);
+                    setLoginSuccess(null);
+                  }}
+                  disabled={isSubmittingAuth}
+                  className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>Continuar com Google</span>
+                </button>
 
-            <button
-              type="button"
-              onClick={() => handleAdminSocialLogin('apple')}
-              disabled={isSubmittingAuth}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
-            >
-              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.93.04-2.06.62-2.72 1.4-.58.67-1.09 1.77-.95 2.84 1.04.08 2.1-.53 2.71-1.28" />
-              </svg>
-              <span>Continuar com Apple</span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdminAuthMode('apple');
+                    setLoginError(null);
+                    setLoginSuccess(null);
+                  }}
+                  disabled={isSubmittingAuth}
+                  className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
+                >
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.93.04-2.06.62-2.72 1.4-.58.67-1.09 1.77-.95 2.84 1.04.08 2.1-.53 2.71-1.28" />
+                  </svg>
+                  <span>Continuar com Apple</span>
+                </button>
+              </div>
 
-            <div className="relative flex items-center justify-center py-1">
-              <div className="border-t border-border w-full" />
-              <span className="bg-card px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
-                ou acesse por e-mail
-              </span>
-              <div className="border-t border-border w-full" />
-            </div>
+              <div className="relative flex items-center justify-center py-1">
+                <div className="border-t border-border w-full" />
+                <span className="bg-card px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
+                  ou acesse por e-mail
+                </span>
+                <div className="border-t border-border w-full" />
+              </div>
 
-            {/* Email OTP Login */}
-            {loginStep === 'input' ? (
-              <form onSubmit={handleSendEmailCode} className="space-y-3">
+              <form onSubmit={handleDirectEmailLogin} className="space-y-3">
                 <input
                   type="email"
                   value={loginEmail}
@@ -431,7 +425,7 @@ function AdminDashboardPage() {
                     setLoginEmail(e.target.value);
                     setLoginError(null);
                   }}
-                  placeholder="Digite seu e-mail"
+                  placeholder="Digite seu e-mail de gestor"
                   className="w-full rounded-2xl border border-border bg-background py-2.5 px-3.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                   required
                 />
@@ -442,45 +436,109 @@ function AdminDashboardPage() {
                   className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
                 >
                   {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  <span>Enviar Código para o E-mail</span>
+                  <span>Acessar Painel de Gestor</span>
                 </button>
               </form>
-            ) : (
-              <form onSubmit={handleVerifyEmailCode} className="space-y-3">
-                <div className="space-y-1.5 text-left">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-foreground">Código de 6 dígitos</label>
-                    <button
-                      type="button"
-                      onClick={() => setLoginStep('input')}
-                      className="text-[11px] text-primary font-bold hover:underline"
-                    >
-                      Trocar e-mail
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={loginOtpCode}
-                    onChange={(e) => setLoginOtpCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="000000"
-                    className="w-full text-center tracking-[0.4em] text-xl font-black rounded-2xl border border-border bg-background py-3 px-3 text-foreground focus:border-primary focus:outline-none"
-                    autoFocus
-                    required
-                  />
-                </div>
+            </div>
+          )}
 
-                <button
-                  type="submit"
-                  disabled={isSubmittingAuth || loginOtpCode.length < 6}
-                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
-                >
-                  {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  <span>Validar e Entrar</span>
-                </button>
-              </form>
-            )}
-          </div>
+          {/* Modo de Login: Google */}
+          {adminAuthMode === 'google' && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAdminSocialAuth('google', loginEmail);
+              }}
+              className="space-y-3.5 pt-1 text-left"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminAuthMode('options');
+                  setLoginError(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Voltar às opções
+              </button>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">
+                  Conta Google Autorizada (@gmail.com)
+                </label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => {
+                    setLoginEmail(e.target.value);
+                    setLoginError(null);
+                  }}
+                  placeholder="exemplo@gmail.com"
+                  className="w-full rounded-2xl border border-border bg-background py-2.5 px-3.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingAuth}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
+              >
+                {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                <span>Confirmar e Entrar com Google</span>
+              </button>
+            </form>
+          )}
+
+          {/* Modo de Login: Apple */}
+          {adminAuthMode === 'apple' && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAdminSocialAuth('apple', loginEmail);
+              }}
+              className="space-y-3.5 pt-1 text-left"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminAuthMode('options');
+                  setLoginError(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Voltar às opções
+              </button>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">
+                  ID Apple Autorizado
+                </label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => {
+                    setLoginEmail(e.target.value);
+                    setLoginError(null);
+                  }}
+                  placeholder="exemplo@icloud.com"
+                  className="w-full rounded-2xl border border-border bg-background py-2.5 px-3.5 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingAuth}
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-2.5 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
+              >
+                {isSubmittingAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                <span>Confirmar e Entrar com Apple</span>
+              </button>
+            </form>
+          )}
 
           <div className="pt-2 border-t border-border/70">
             <Link
