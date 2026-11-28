@@ -112,7 +112,7 @@ export function SiteHeader({
   onSelectDate,
 }: SiteHeaderProps) {
   const { settings } = useSiteSettings();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, isAdmin, signOut } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuContainerRef = useRef<HTMLDivElement>(null);
@@ -534,7 +534,7 @@ export function SiteHeader({
                               {user?.name}
                             </p>
                             <p className="text-[10px] text-muted-foreground truncate">
-                              {user?.email || user?.phone || 'Conectado'} • {user?.provider.toUpperCase()}
+                              {user?.email || 'Conectado'} • {user?.provider.toUpperCase()}
                             </p>
                           </div>
                           <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-300">
@@ -571,42 +571,46 @@ export function SiteHeader({
                             Entrar ou Criar Conta
                           </p>
                           <p className="text-[11px] text-muted-foreground truncate">
-                            Google, Microsoft, Apple, WhatsApp ou E-mail
+                            Google, Microsoft, Apple ou E-mail
                           </p>
                         </div>
                         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                       </button>
                     )}
 
-                    {/* Group 4: Administração e Gestão do Site */}
-                    <div className="mt-2.5 pt-2 border-t border-border/70 px-2 py-1">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                        Painel Administrativo
-                      </span>
-                    </div>
-
-                    <Link
-                      to="/admin"
-                      role="menuitem"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent"
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-purple-500/35 bg-purple-500/15 text-purple-600 dark:text-purple-400">
-                        <Settings className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-extrabold truncate flex items-center gap-1.5">
-                          Painel do Gestor
-                          <span className="rounded bg-primary/20 px-1 py-0.2 text-[9px] font-bold text-primary">
-                            ADM
+                    {/* Painel do Gestor (Aparece EXCLUSIVAMENTE para os gestores autenticados) */}
+                    {isAdmin && (
+                      <>
+                        <div className="mt-2.5 pt-2 border-t border-border/70 px-2 py-1">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                            Painel Administrativo
                           </span>
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          Audiência, métricas e personalização do site
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    </Link>
+                        </div>
+
+                        <Link
+                          to="/admin"
+                          role="menuitem"
+                          onClick={() => setMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent"
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-purple-500/35 bg-purple-500/15 text-purple-600 dark:text-purple-400">
+                            <Settings className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-extrabold truncate flex items-center gap-1.5">
+                              Painel do Gestor
+                              <span className="rounded bg-primary/20 px-1 py-0.2 text-[9px] font-bold text-primary">
+                                ADM
+                              </span>
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              Controle de audiência e ajustes do site
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

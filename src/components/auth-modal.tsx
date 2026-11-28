@@ -2,22 +2,19 @@ import { useState } from 'react';
 import {
   X,
   Mail,
-  Smartphone,
   CheckCircle2,
   AlertCircle,
   Loader2,
   ArrowLeft,
   ShieldCheck,
-  Sparkles,
   Lock,
 } from 'lucide-react';
 import {
   UserProfile,
   signInWithSocial,
-  sendOtpCode,
-  verifyOtpCode,
+  sendEmailOtp,
+  verifyEmailOtp,
 } from '../lib/auth';
-import { WhatsAppIcon } from './icons/whatsapp-icon';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -27,34 +24,27 @@ interface AuthModalProps {
   subtitle?: string;
 }
 
-type AuthMethod = 'select' | 'email' | 'whatsapp' | 'verify-code';
+type AuthStep = 'methods' | 'email-input' | 'email-verify';
 
 export function AuthModal({
   isOpen,
   onClose,
   onSuccess,
-  title = 'Entre para Ativar Alertas',
-  subtitle = 'Escolha como deseja se conectar para receber notificações de gols, escalações e jogos no seu celular.',
+  title = 'Entre na sua Conta',
+  subtitle = 'Acesse para receber alertas e notificações de gols, partidas e escalações no celular.',
 }: AuthModalProps) {
-  const [method, setMethod] = useState<AuthMethod>('select');
+  const [step, setStep] = useState<AuthStep>('methods');
   const [emailInput, setEmailInput] = useState('');
-  const [phoneInput, setPhoneInput] = useState('');
-  const [targetValue, setTargetValue] = useState('');
-  const [targetType, setTargetType] = useState<'email' | 'whatsapp'>('whatsapp');
-
   const [otpCode, setOtpCode] = useState('');
-  const [demoCode, setDemoCode] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const resetState = () => {
-    setMethod('select');
+    setStep('methods');
     setEmailInput('');
-    setPhoneInput('');
     setOtpCode('');
-    setDemoCode(null);
     setFeedback(null);
     setIsLoading(false);
   };
@@ -69,14 +59,10 @@ export function AuthModal({
     setFeedback(null);
     try {
       const res = await signInWithSocial(provider);
-      if (res.success && res.user) {
-        setFeedback({ type: 'success', text: res.message });
-        setTimeout(() => {
-          onSuccess?.(res.user!);
-          handleClose();
-        }, 1200);
+      if (res.success) {
+        setFeedback({ type: 'info', text: res.message });
       } else {
-        setFeedback({ type: 'error', text: res.message || 'Erro ao conectar. Tente novamente.' });
+        setFeedback({ type: 'error', text: res.message });
       }
     } catch {
       setFeedback({ type: 'error', text: 'Não foi possível conectar. Tente com outro método.' });
@@ -85,58 +71,52 @@ export function AuthModal({
     }
   };
 
-  const handleSendCode = async (type: 'email' | 'whatsapp') => {
-    const value = type === 'email' ? emailInput : phoneInput;
-    if (!value.trim()) {
-      setFeedback({
-        type: 'error',
-        text: type === 'email' ? 'Digite um e-mail válido.' : 'Digite seu número de WhatsApp com DDD.',
-      });
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailInput.trim() || !emailInput.includes('@')) {
+      setFeedback({ type: 'error', text: 'Digite um endereço de e-mail válido.' });
       return;
     }
 
     setIsLoading(true);
     setFeedback(null);
     try {
-      const res = await sendOtpCode(value, type);
+      const res = await sendEmailOtp(emailInput);
       if (res.success) {
-        setTargetValue(value.trim());
-        setTargetType(type);
-        setDemoCode(res.code || '123456');
-        setMethod('verify-code');
-        setFeedback({ type: 'info', text: res.message });
+        setStep('email-verify');
+        setFeedback({ type: 'success', text: res.message });
       } else {
         setFeedback({ type: 'error', text: res.message });
       }
     } catch {
-      setFeedback({ type: 'error', text: 'Falha no envio do código. Tente novamente.' });
+      setFeedback({ type: 'error', text: 'Falha no envio do e-mail. Tente novamente.' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpCode.trim()) {
-      setFeedback({ type: 'error', text: 'Digite o código de 6 dígitos.' });
+    if (otpCode.trim().length < 6) {
+      setFeedback({ type: 'error', text: 'Digite o código de 6 dígitos enviado ao seu e-mail.' });
       return;
     }
 
     setIsLoading(true);
     setFeedback(null);
     try {
-      const res = await verifyOtpCode(targetValue, otpCode, targetType);
+      const res = await verifyEmailOtp(emailInput, otpCode);
       if (res.success && res.user) {
-        setFeedback({ type: 'success', text: res.message });
+        setFeedback({ type: 'success', text: 'Login confirmado com sucesso!' });
         setTimeout(() => {
           onSuccess?.(res.user!);
           handleClose();
-        }, 1200);
+        }, 1000);
       } else {
         setFeedback({ type: 'error', text: res.message });
       }
     } catch {
-      setFeedback({ type: 'error', text: 'Código incorreto. Tente novamente.' });
+      setFeedback({ type: 'error', text: 'Código inválido ou expirado.' });
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +130,7 @@ export function AuthModal({
       onClick={handleClose}
     >
       <div
-        className="relative w-full max-w-md my-auto rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-2xl space-y-3.5 animate-in zoom-in-95 max-h-[92vh] overflow-y-auto"
+        className="relative w-full max-w-md my-auto rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-2xl space-y-4 animate-in zoom-in-95 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -164,14 +144,14 @@ export function AuthModal({
         </button>
 
         {/* Modal Header */}
-        <div className="text-center space-y-1 pt-0.5">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30">
+        <div className="text-center space-y-1 pt-1">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/30">
             <Lock className="h-5 w-5" />
           </div>
           <h3 className="text-base sm:text-lg font-black text-foreground tracking-tight">
             {title}
           </h3>
-          <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
+          <p className="text-xs text-muted-foreground max-w-xs mx-auto">
             {subtitle}
           </p>
         </div>
@@ -179,7 +159,7 @@ export function AuthModal({
         {/* Feedback Alert */}
         {feedback && (
           <div
-            className={`rounded-xl p-2.5 text-xs font-semibold flex items-center gap-2 ${
+            className={`rounded-xl p-3 text-xs font-semibold flex items-center gap-2 ${
               feedback.type === 'error'
                 ? 'bg-destructive/15 text-destructive border border-destructive/30'
                 : feedback.type === 'success'
@@ -189,15 +169,14 @@ export function AuthModal({
           >
             {feedback.type === 'error' && <AlertCircle className="h-4 w-4 shrink-0" />}
             {feedback.type === 'success' && <CheckCircle2 className="h-4 w-4 shrink-0" />}
-            {feedback.type === 'info' && <Sparkles className="h-4 w-4 shrink-0" />}
+            {feedback.type === 'info' && <Loader2 className="h-4 w-4 shrink-0 animate-spin" />}
             <span>{feedback.text}</span>
           </div>
         )}
 
-        {/* STEP 1: Main Method Selection */}
-        {method === 'select' && (
+        {/* STEP 1: Main Methods */}
+        {step === 'methods' && (
           <div className="space-y-3.5">
-            {/* Social Logins: Google, Microsoft, Apple */}
             <div className="space-y-2">
               {/* Google */}
               <button
@@ -227,6 +206,19 @@ export function AuthModal({
                 <span>Continuar com Google</span>
               </button>
 
+              {/* Apple */}
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('apple')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
+              >
+                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.93.04-2.06.62-2.72 1.4-.58.67-1.09 1.77-.95 2.84 1.04.08 2.1-.53 2.71-1.28" />
+                </svg>
+                <span>Continuar com Apple</span>
+              </button>
+
               {/* Microsoft */}
               <button
                 type="button"
@@ -242,185 +234,98 @@ export function AuthModal({
                 </svg>
                 <span>Continuar com Microsoft</span>
               </button>
-
-              {/* Apple */}
-              <button
-                type="button"
-                onClick={() => handleSocialLogin('apple')}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 rounded-2xl border border-border bg-background py-2.5 px-4 text-xs font-extrabold text-foreground hover:bg-muted/80 hover:border-foreground/30 transition shadow-sm cursor-pointer"
-              >
-                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.84c.64-.78 1.08-1.87.96-2.96-.93.04-2.06.62-2.72 1.4-.58.67-1.09 1.77-.95 2.84 1.04.08 2.1-.53 2.71-1.28" />
-                </svg>
-                <span>Continuar com Apple</span>
-              </button>
             </div>
 
-            {/* Separator */}
             <div className="relative flex items-center justify-center">
               <div className="border-t border-border w-full" />
               <span className="bg-card px-2.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">
-                ou receba um código
+                ou acesse por e-mail
               </span>
               <div className="border-t border-border w-full" />
             </div>
 
-            {/* Code Options: WhatsApp & E-mail */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMethod('whatsapp');
-                  setFeedback(null);
-                }}
-                className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-2.5 sm:p-3 text-center transition hover:bg-emerald-500/20 hover:border-emerald-500/60 cursor-pointer"
-              >
-                <WhatsAppIcon className="h-4 w-4 text-emerald-500" />
-                <span className="text-xs font-black text-emerald-700 dark:text-emerald-300">
-                  Via WhatsApp
-                </span>
-                <span className="text-[10px] text-muted-foreground">Código no celular</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => {
+                setStep('email-input');
+                setFeedback(null);
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-border bg-muted/60 hover:bg-muted py-2.5 px-4 text-xs font-bold text-foreground transition cursor-pointer"
+            >
+              <Mail className="h-4 w-4 text-primary" />
+              <span>Entrar com Código por E-mail</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setMethod('email');
-                  setFeedback(null);
-                }}
-                className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-sky-500/35 bg-sky-500/10 p-2.5 sm:p-3 text-center transition hover:bg-sky-500/20 hover:border-sky-500/60 cursor-pointer"
-              >
-                <Mail className="h-4 w-4 text-sky-500" />
-                <span className="text-xs font-black text-sky-700 dark:text-sky-300">
-                  Via E-mail
-                </span>
-                <span className="text-[10px] text-muted-foreground">Código na caixa</span>
-              </button>
-            </div>
-
-            <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
-              <ShieldCheck className="h-3 w-3 text-emerald-500" />
-              Seus dados são 100% seguros e utilizados apenas para envio dos alertas.
+            <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1.5 pt-1">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              Login oficial e criptografado. Seus dados estão protegidos.
             </p>
           </div>
         )}
 
-        {/* STEP 2A: Form WhatsApp */}
-        {method === 'whatsapp' && (
-          <div className="space-y-4">
+        {/* STEP 2: Input Email */}
+        {step === 'email-input' && (
+          <form onSubmit={handleSendEmail} className="space-y-3.5">
             <button
               type="button"
               onClick={() => {
-                setMethod('select');
+                setStep('methods');
                 setFeedback(null);
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Voltar às opções
+              <ArrowLeft className="h-3.5 w-3.5" /> Voltar
             </button>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 text-left">
               <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <WhatsAppIcon className="h-4 w-4 text-emerald-500" />
-                Número do seu WhatsApp (com DDD)
-              </label>
-              <input
-                type="tel"
-                value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder="Ex: (11) 98765-4321"
-                className="w-full rounded-2xl border border-border bg-background py-3 px-4 text-sm font-semibold text-foreground focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                autoFocus
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Enviaremos um código de 6 dígitos para você confirmar sua entrada.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => handleSendCode('whatsapp')}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 py-3.5 px-4 text-xs font-extrabold text-white shadow-lg hover:opacity-95 transition cursor-pointer"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <WhatsAppIcon className="h-4 w-4" />
-              )}
-              <span>Enviar Código no WhatsApp</span>
-            </button>
-          </div>
-        )}
-
-        {/* STEP 2B: Form E-mail */}
-        {method === 'email' && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => {
-                setMethod('select');
-                setFeedback(null);
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Voltar às opções
-            </button>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <Mail className="h-4 w-4 text-sky-500" />
-                Seu endereço de e-mail
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                Digite seu endereço de e-mail
               </label>
               <input
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                placeholder="exemplo@gmail.com"
-                className="w-full rounded-2xl border border-border bg-background py-3 px-4 text-sm font-semibold text-foreground focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                placeholder="seu.email@exemplo.com"
+                className="w-full rounded-2xl border border-border bg-background py-3 px-4 text-xs font-semibold text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 autoFocus
+                required
               />
               <p className="text-[11px] text-muted-foreground">
-                Você receberá um código de confirmação no seu e-mail.
+                Enviaremos um código oficial para confirmar seu acesso.
               </p>
             </div>
 
             <button
-              type="button"
-              onClick={() => handleSendCode('email')}
+              type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 py-3.5 px-4 text-xs font-extrabold text-white shadow-lg hover:opacity-95 transition cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition cursor-pointer"
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               <span>Enviar Código por E-mail</span>
             </button>
-          </div>
+          </form>
         )}
 
-        {/* STEP 3: Verify 6-digit Code */}
-        {method === 'verify-code' && (
-          <form onSubmit={handleVerifyCode} className="space-y-4">
+        {/* STEP 3: Verify OTP Code */}
+        {step === 'email-verify' && (
+          <form onSubmit={handleVerifyOtp} className="space-y-3.5">
             <button
               type="button"
               onClick={() => {
-                setMethod(targetType);
+                setStep('email-input');
                 setFeedback(null);
               }}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition cursor-pointer"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> Alterar {targetType === 'whatsapp' ? 'número' : 'e-mail'}
+              <ArrowLeft className="h-3.5 w-3.5" /> Trocar e-mail
             </button>
 
             <div className="space-y-2 text-center">
               <p className="text-xs text-foreground font-semibold">
                 Digite o código de 6 dígitos enviado para:
               </p>
-              <p className="text-sm font-black text-primary truncate">{targetValue}</p>
+              <p className="text-xs font-black text-primary truncate">{emailInput}</p>
 
               <input
                 type="text"
@@ -430,43 +335,27 @@ export function AuthModal({
                 placeholder="000000"
                 className="w-full text-center tracking-[0.4em] text-2xl font-black rounded-2xl border border-border bg-background py-3.5 px-4 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 autoFocus
+                required
               />
-
-              {demoCode && (
-                <div className="rounded-xl bg-muted/60 p-2 text-[11px] text-muted-foreground">
-                  <span>Código de verificação gerado: </span>
-                  <strong className="text-primary font-mono text-xs">{demoCode}</strong>
-                  <button
-                    type="button"
-                    onClick={() => setOtpCode(demoCode)}
-                    className="ml-2 text-[10px] font-bold text-primary underline hover:opacity-80"
-                  >
-                    Preencher automático
-                  </button>
-                </div>
-              )}
             </div>
 
             <button
               type="submit"
-              disabled={isLoading || otpCode.length < 4}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 px-4 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
+              disabled={isLoading || otpCode.length < 6}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-xs font-extrabold text-primary-foreground shadow-lg hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
             >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4" />
-              )}
-              <span>Confirmar e Ativar Alertas</span>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              <span>Confirmar Código</span>
             </button>
 
-            <div className="text-center">
+            <div className="text-center pt-1">
               <button
                 type="button"
-                onClick={() => handleSendCode(targetType)}
-                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition"
+                onClick={handleSendEmail}
+                disabled={isLoading}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition cursor-pointer"
               >
-                Não recebeu o código? <span className="text-primary font-bold">Reenviar</span>
+                Não recebeu? <span className="text-primary font-bold">Reenviar código</span>
               </button>
             </div>
           </form>

@@ -874,7 +874,7 @@ function JogosDeHoje() {
         onClose={closeAuthModal}
         onSuccess={handleAuthSuccess}
         title="Entre para Ativar Alertas"
-        subtitle="Conecte-se com Google, Microsoft, Apple, WhatsApp ou E-mail para receber alertas de gols e partidas."
+        subtitle="Conecte-se com Google, Microsoft, Apple ou E-mail para receber alertas de gols e partidas."
       />
     </div>
   );

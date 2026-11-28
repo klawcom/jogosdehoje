@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 
-export type AuthProviderType = 'google' | 'microsoft' | 'apple' | 'email' | 'whatsapp';
+export type AuthProviderType = 'google' | 'microsoft' | 'apple' | 'email';
 
 export interface UserProfile {
   id: string;
@@ -13,28 +13,19 @@ export interface UserProfile {
   createdAt: string;
 }
 
-/**
- * E-mails autorizados com permissão de Gestor / Admin
- * Todas as senhas por PIN foram revogadas; o acesso é liberado exclusivamente para estes e-mails.
- */
-export const AUTHORIZED_ADMIN_EMAILS = [
+const STORAGE_KEY = 'jogosdehoje_auth_user';
+
+const AUTHORIZED_ADMIN_EMAILS = [
   'klaw.com@gmail.com',
   'klawdhynney@gmail.com',
-] as const;
+];
 
+/**
+ * Verifica estritamente se o e-mail possui privilégios de gestor
+ */
 export function isAuthorizedAdmin(email?: string | null): boolean {
   if (!email) return false;
-  return AUTHORIZED_ADMIN_EMAILS.includes(email.trim().toLowerCase() as any);
-}
-
-const STORAGE_KEY = 'jogosdehoje_auth_user';
-const PENDING_OTP_KEY = 'jogosdehoje_pending_otp';
-
-interface PendingOtpData {
-  target: string;
-  code: string;
-  type: 'email' | 'whatsapp';
-  expiresAt: number;
+  return AUTHORIZED_ADMIN_EMAILS.includes(email.trim().toLowerCase());
 }
 
 /**
@@ -62,7 +53,6 @@ export function setStoredUser(user: UserProfile | null): void {
     } else {
       localStorage.removeItem(STORAGE_KEY);
     }
-    // Dispara evento para sincronizar múltiplos componentes
     window.dispatchEvent(new Event('jogosdehoje_auth_change'));
   } catch (err) {
     console.warn('[Auth] Falha ao persistir usuário:', err);
@@ -70,130 +60,11 @@ export function setStoredUser(user: UserProfile | null): void {
 }
 
 /**
- * Gera código de confirmação aleatório de 6 dígitos
- */
-function generate6DigitCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-/**
- * Envia código de confirmação por E-mail ou WhatsApp
- */
-export async function sendOtpCode(
-  target: string,
-  type: 'email' | 'whatsapp'
-): Promise<{ success: boolean; message: string; code?: string }> {
-  const cleanTarget = target.trim();
-  if (!cleanTarget) {
-    return {
-      success: false,
-      message: type === 'email' ? 'Por favor, digite um e-mail válido.' : 'Por favor, digite um número de WhatsApp válido.',
-    };
-  }
-
-  // Gera código de 6 dígitos válido por 10 minutos
-  const code = generate6DigitCode();
-  const pendingData: PendingOtpData = {
-    target: cleanTarget,
-    code,
-    type,
-    expiresAt: Date.now() + 10 * 60 * 1000,
-  };
-
-  try {
-    sessionStorage.setItem(PENDING_OTP_KEY, JSON.stringify(pendingData));
-  } catch {
-    // sessionStorage fallback
-  }
-
-  // Se for e-mail e o Supabase estiver configurado com auth real, tenta enviar OTP oficial
-  if (type === 'email' && supabase) {
-    try {
-      await supabase.auth.signInWithOtp({
-        email: cleanTarget,
-        options: {
-          shouldCreateUser: true,
-        },
-      });
-    } catch {
-      // Continua com código local caso o Supabase SMTP não esteja ativo
-    }
-  }
-
-  const destinationLabel = type === 'whatsapp' ? `WhatsApp (${cleanTarget})` : `e-mail (${cleanTarget})`;
-  return {
-    success: true,
-    message: `Código de 6 dígitos enviado para seu ${destinationLabel}!`,
-    code, // Retornado para exibição de conveniência/teste rápido
-  };
-}
-
-/**
- * Verifica código OTP de 6 dígitos inserido pelo usuário
- */
-export async function verifyOtpCode(
-  target: string,
-  code: string,
-  type: 'email' | 'whatsapp'
-): Promise<{ success: boolean; user?: UserProfile; message: string }> {
-  const cleanCode = code.trim().replace(/\D/g, '');
-  const cleanTarget = target.trim();
-
-  // Verifica código armazenado na sessão
-  let storedOtp: PendingOtpData | null = null;
-  try {
-    const raw = sessionStorage.getItem(PENDING_OTP_KEY);
-    if (raw) storedOtp = JSON.parse(raw);
-  } catch {
-    storedOtp = null;
-  }
-
-  // Permite o código gerado ou o código padrão universal '123456' para facilidade de testes
-  const isValidCode =
-    (storedOtp && storedOtp.code === cleanCode && Date.now() <= storedOtp.expiresAt) ||
-    cleanCode === '123456';
-
-  if (!isValidCode) {
-    return {
-      success: false,
-      message: 'Código de confirmação incorreto ou expirado. Tente novamente.',
-    };
-  }
-
-  // Cria perfil do usuário autenticado
-  const derivedName =
-    type === 'email'
-      ? cleanTarget.split('@')[0].replace(/[._]/g, ' ')
-      : `Torcedor ${cleanTarget.slice(-4)}`;
-
-  const user: UserProfile = {
-    id: `user_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    name: derivedName.charAt(0).toUpperCase() + derivedName.slice(1),
-    email: type === 'email' ? cleanTarget : undefined,
-    phone: type === 'whatsapp' ? cleanTarget : undefined,
-    provider: type,
-    createdAt: new Date().toISOString(),
-  };
-
-  setStoredUser(user);
-  try {
-    sessionStorage.removeItem(PENDING_OTP_KEY);
-  } catch {}
-
-  return {
-    success: true,
-    user,
-    message: 'Login realizado com sucesso! Seus alertas agora estão ativos.',
-  };
-}
-
-/**
- * Autenticação Social via Google, Microsoft ou Apple
+ * Autenticação Social Oficial via Supabase OAuth (Google, Microsoft, Apple)
  */
 export async function signInWithSocial(
   provider: 'google' | 'microsoft' | 'apple'
 ): Promise<{ success: boolean; user?: UserProfile; message: string }> {
-  // Mapeia provedor para Supabase
   const supabaseProvider = provider === 'microsoft' ? 'azure' : provider;
 
   if (supabase) {
@@ -205,62 +76,160 @@ export async function signInWithSocial(
         },
       });
 
-      if (!error && data?.url) {
-        // Redireciona para o fluxo OAuth oficial
+      if (error) {
+        return {
+          success: false,
+          message: error.message || 'Erro ao conectar com provedor.',
+        };
+      }
+
+      if (data?.url) {
         window.location.href = data.url;
         return {
           success: true,
-          message: `Redirecionando para login com ${provider.toUpperCase()}...`,
+          message: `Redirecionando para login seguro com ${provider.toUpperCase()}...`,
         };
       }
-    } catch {
-      // Fallback para criação imediata de perfil autenticado
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Falha na conexão com serviço de autenticação.',
+      };
     }
   }
 
-  // Fallback elegante para ambiente local/desenvolvimento
-  const providerNames: Record<string, string> = {
-    google: 'Usuário Google',
-    microsoft: 'Usuário Microsoft',
-    apple: 'Usuário Apple',
-  };
-
-  const user: UserProfile = {
-    id: `social_${provider}_${Date.now()}`,
-    name: providerNames[provider] || 'Torcedor Conectado',
-    email: `torcedor@${provider}.com`,
-    provider,
-    avatarUrl:
-      provider === 'google'
-        ? 'https://lh3.googleusercontent.com/a/default-user'
-        : undefined,
-    createdAt: new Date().toISOString(),
-  };
-
-  setStoredUser(user);
   return {
-    success: true,
-    user,
-    message: `Conectado com sucesso via ${provider.toUpperCase()}!`,
+    success: false,
+    message: 'Serviço de autenticação temporariamente indisponível.',
   };
 }
 
 /**
- * Finalizar sessão (Logout)
+ * Envia código ou link de acesso real para o e-mail informado
+ */
+export async function sendEmailOtp(
+  email: string
+): Promise<{ success: boolean; message: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return {
+      success: false,
+      message: 'Por favor, digite um endereço de e-mail válido.',
+    };
+  }
+
+  if (supabase) {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          emailRedirectTo: typeof window !== 'undefined' ? window.location.origin : undefined,
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        return {
+          success: false,
+          message: error.message || 'Falha ao enviar e-mail de confirmação.',
+        };
+      }
+
+      return {
+        success: true,
+        message: `Código ou link de confirmação enviado para ${cleanEmail}! Verifique sua caixa de entrada e spam.`,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Erro ao solicitar envio de código por e-mail.',
+      };
+    }
+  }
+
+  return {
+    success: false,
+    message: 'Serviço de e-mail temporariamente indisponível.',
+  };
+}
+
+/**
+ * Valida o código OTP real de 6 dígitos recebido por e-mail
+ */
+export async function verifyEmailOtp(
+  email: string,
+  token: string
+): Promise<{ success: boolean; user?: UserProfile; message: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanToken = token.trim().replace(/\D/g, '');
+
+  if (!cleanToken || cleanToken.length < 6) {
+    return {
+      success: false,
+      message: 'Digite o código de 6 dígitos recebido.',
+    };
+  }
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: 'email',
+      });
+
+      if (error || !data.user) {
+        return {
+          success: false,
+          message: error?.message || 'Código incorreto ou expirado. Tente solicitar um novo.',
+        };
+      }
+
+      const supaUser = data.user;
+      const user: UserProfile = {
+        id: supaUser.id,
+        name: supaUser.user_metadata?.full_name || cleanEmail.split('@')[0],
+        email: supaUser.email,
+        provider: 'email',
+        createdAt: supaUser.created_at,
+      };
+
+      setStoredUser(user);
+      return {
+        success: true,
+        user,
+        message: 'Login realizado com sucesso!',
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Falha ao validar código.',
+      };
+    }
+  }
+
+  return {
+    success: false,
+    message: 'Servidor de autenticação indisponível.',
+  };
+}
+
+/**
+ * Encerra a sessão
  */
 export async function signOut(): Promise<void> {
   if (supabase) {
     try {
       await supabase.auth.signOut();
     } catch {
-      // Ignora erro caso sessão seja apenas local
+      // Ignora erro
     }
   }
   setStoredUser(null);
 }
 
 /**
- * Hook React useAuth para gerenciamento do estado de login
+ * Hook central de autenticação
  */
 export function useAuth() {
   const [user, setUser] = useState<UserProfile | null>(() => getStoredUser());
@@ -274,7 +243,6 @@ export function useAuth() {
 
     window.addEventListener('jogosdehoje_auth_change', handleAuthChange);
 
-    // Sincroniza com sessão Supabase se existir
     if (supabase) {
       supabase.auth.getSession().then(({ data }) => {
         if (data?.session?.user) {
@@ -284,7 +252,6 @@ export function useAuth() {
             id: supaUser.id,
             name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Torcedor',
             email: supaUser.email,
-            phone: supaUser.phone,
             provider,
             avatarUrl: supaUser.user_metadata?.avatar_url,
             createdAt: supaUser.created_at,
@@ -301,7 +268,6 @@ export function useAuth() {
             id: supaUser.id,
             name: supaUser.user_metadata?.full_name || supaUser.email?.split('@')[0] || 'Torcedor',
             email: supaUser.email,
-            phone: supaUser.phone,
             provider,
             avatarUrl: supaUser.user_metadata?.avatar_url,
             createdAt: supaUser.created_at,
@@ -323,9 +289,6 @@ export function useAuth() {
     };
   }, []);
 
-  /**
-   * Executa a ação caso o usuário esteja autenticado, ou abre o modal de login
-   */
   const requireAuth = useCallback(
     (action: () => void) => {
       if (user) {

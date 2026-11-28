@@ -169,7 +169,7 @@ export function NotificationModal({
                     Login Necessário para Receber Alertas
                   </h4>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Conecte sua conta com <strong>Google</strong>, <strong>Microsoft</strong>, <strong>Apple</strong> ou receba um código de 6 dígitos no <strong>WhatsApp</strong> ou <strong>E-mail</strong> para receber alertas no celular.
+                    Conecte sua conta com <strong>Google</strong>, <strong>Microsoft</strong>, <strong>Apple</strong> ou código no <strong>E-mail</strong> para receber alertas no celular.
                   </p>
                 </div>
               </div>
@@ -180,7 +180,7 @@ export function NotificationModal({
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 px-4 text-xs font-black text-primary-foreground shadow-md hover:opacity-95 transition cursor-pointer"
               >
                 <LogIn className="h-4 w-4" />
-                <span>Entrar com Google, Microsoft, Apple ou WhatsApp</span>
+                <span>Entrar com Google, Microsoft, Apple ou E-mail</span>
               </button>
             </div>
           ) : (
@@ -197,7 +197,7 @@ export function NotificationModal({
                     </span>
                   </p>
                   <p className="text-[10px] text-muted-foreground truncate">
-                    {user?.email || user?.phone || 'Conta conectada aos alertas'}
+                    {user?.email || 'Conta conectada aos alertas'}
                   </p>
                 </div>
               </div>
