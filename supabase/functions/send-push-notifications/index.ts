@@ -151,16 +151,39 @@ serve(async (req: Request) => {
           const home = match.team_home;
           const away = match.team_away;
 
-          // Seleciona os usuários interessados neste jogo
+          // Seleciona os usuários interessados neste jogo (por time ou por campeonato favorito)
+          const matchChamp = (match.championship || "").toLowerCase();
+
           const interestedSubs = subscriptions.filter((sub: any) => {
             if (!sub.notify_pregame) return false;
-            if (!sub.favorite_teams || sub.favorite_teams.length === 0) return true; // inscritos gerais
-            return (
-              sub.favorite_teams.some((t: string) =>
-                home.toLowerCase().includes(t.toLowerCase()) ||
-                away.toLowerCase().includes(t.toLowerCase())
-              )
-            );
+
+            // 1. Alerta por Campeonato Favorito
+            const champMatch =
+              Array.isArray(sub.favorite_championships) &&
+              sub.favorite_championships.some((c: string) => {
+                const cNorm = c.toLowerCase();
+                return matchChamp.includes(cNorm) || cNorm.includes(matchChamp);
+              });
+            if (champMatch) return true;
+
+            // 2. Alerta por Time Favorito
+            const teamMatch =
+              Array.isArray(sub.favorite_teams) &&
+              sub.favorite_teams.some((t: string) => {
+                const tNorm = t.toLowerCase();
+                return (
+                  home.toLowerCase().includes(tNorm) ||
+                  away.toLowerCase().includes(tNorm)
+                );
+              });
+            if (teamMatch) return true;
+
+            // 3. Inscrito geral sem filtros específicos
+            const hasNoFilters =
+              (!sub.favorite_teams || sub.favorite_teams.length === 0) &&
+              (!sub.favorite_championships || sub.favorite_championships.length === 0);
+
+            return hasNoFilters;
           });
 
           const title = `🔔 JOGO EM BREVE: ${home} x ${away}`;

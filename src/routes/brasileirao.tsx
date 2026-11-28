@@ -175,7 +175,14 @@ function BrasileiraoTabelaPage() {
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const {
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    favoriteChampionships,
+    toggleFavoriteChampionship,
+    isFavoriteChampionship,
+  } = useFavorites();
   const { isSubscribed: isNotificationsActive } = usePushNotifications();
 
   useEffect(() => {
@@ -1322,12 +1329,17 @@ function BrasileiraoTabelaPage() {
         favorites={favorites}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
+        favoriteChampionships={favoriteChampionships}
+        isFavoriteChampionship={isFavoriteChampionship}
+        onToggleFavoriteChampionship={toggleFavoriteChampionship}
+        onOpenNotifications={() => setShowNotificationModal(true)}
       />
 
       <NotificationModal
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
         favorites={favorites}
+        favoriteChampionships={favoriteChampionships}
         onOpenFavorites={() => setShowFavoritesModal(true)}
       />
     </div>

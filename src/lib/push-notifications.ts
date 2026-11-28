@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
-import { getStoredFavorites } from './favorites';
+import { getStoredFavorites, getStoredFavoriteChampionships } from './favorites';
 
 // Chave Pública VAPID (Web Push RFC 8030)
 export const VAPID_PUBLIC_KEY =
@@ -102,6 +102,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
  */
 export async function subscribeToPush(
   favoriteTeams?: string[],
+  favoriteChampionships?: string[],
   preferences?: NotificationPreferences
 ): Promise<{ success: boolean; message: string }> {
   if (!isPushSupported()) {
@@ -151,6 +152,7 @@ export async function subscribeToPush(
 
     // 4. Salvar no Supabase
     const teams = favoriteTeams ?? getStoredFavorites();
+    const champs = favoriteChampionships ?? getStoredFavoriteChampionships();
     const prefs = preferences ?? getStoredPreferences();
 
     saveStoredPreferences(prefs);
@@ -163,6 +165,7 @@ export async function subscribeToPush(
           p256dh,
           auth,
           favorite_teams: teams,
+          favorite_championships: champs,
           notify_pregame: prefs.notify_pregame,
           notify_kickoff: prefs.notify_kickoff,
           notify_goals: prefs.notify_goals,
@@ -287,7 +290,10 @@ export function usePushNotifications() {
     checkStatus();
   }, [checkStatus]);
 
-  const toggleSubscription = async (teams?: string[]): Promise<{ success: boolean; message: string }> => {
+  const toggleSubscription = async (
+    teams?: string[],
+    championships?: string[]
+  ): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
     try {
       if (isSubscribed) {
@@ -295,7 +301,7 @@ export function usePushNotifications() {
         setIsSubscribed(false);
         return { success: true, message: 'Alertas desativados.' };
       } else {
-        const res = await subscribeToPush(teams, preferences);
+        const res = await subscribeToPush(teams, championships, preferences);
         await checkStatus();
         return res;
       }

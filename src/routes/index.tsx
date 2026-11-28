@@ -15,6 +15,9 @@ import {
   ChevronRight as ChevronRightIcon,
   Tv,
   Radio,
+  Bell,
+  BellRing,
+  Users,
 } from "lucide-react";
 import { fetchMatchesServerFn, fetchLiveScoresServerFn } from "../lib/server-fn";
 import { DaySchedule, MatchItem, ChannelType } from "../lib/types";
@@ -33,6 +36,7 @@ import { TeamBadge } from "../components/team-badge";
 import { FloatingWhatsAppButton } from "../components/floating-whatsapp-button";
 import { FavoritesModal } from "../components/favorites-modal";
 import { NotificationModal } from "../components/notification-modal";
+import { LineupModal } from "../components/lineup-modal";
 import { usePushNotifications } from "../lib/push-notifications";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
@@ -42,12 +46,16 @@ import { enrichMatchesWithScores } from "../lib/live-scores";
 
 export const Route = createFileRoute("/")({
   component: JogosDeHoje,
-  validateSearch: (search: Record<string, unknown>): { date?: string } => {
+  validateSearch: (search: Record<string, unknown>): { date?: string; live?: string } => {
+    const res: { date?: string; live?: string } = {};
     const raw = search["date"];
     if (typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      return { date: raw };
+      res.date = raw;
     }
-    return {};
+    if (search["live"] === "true") {
+      res.live = "true";
+    }
+    return res;
   },
   loader: async () => {
     try {
@@ -222,14 +230,33 @@ function JogosDeHoje() {
   const [onlyLive, setOnlyLive] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [lineupMatch, setLineupMatch] = useState<MatchItem | null>(null);
 
   // Active match for details modal/page
   const [activeMatch, setActiveMatch] = useState<MatchItem | null>(null);
 
   const { isDark, toggleTheme } = useTheme();
-  const { favorites, toggleFavorite, isFavorite, matchHasFavorite } = useFavorites();
+  const {
+    favorites,
+    toggleFavorite,
+    isFavorite,
+    favoriteChampionships,
+    toggleFavoriteChampionship,
+    isFavoriteChampionship,
+    matchAlerts,
+    toggleMatchAlert,
+    isMatchAlertActive,
+    matchHasFavorite,
+    matchHasAlert,
+  } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
   const { isSubscribed: isNotificationsActive } = usePushNotifications();
+
+  useEffect(() => {
+    if (searchParams?.live === "true") {
+      setOnlyLive(true);
+    }
+  }, [searchParams?.live]);
 
   useEffect(() => {
     if (!days || days.length === 0) return;
@@ -430,6 +457,9 @@ function JogosDeHoje() {
         onOpenFavorites={() => setShowFavoritesModal(true)}
         onOpenNotifications={() => setShowNotificationModal(true)}
         isNotificationsActive={isNotificationsActive}
+        liveMatchesCount={liveMatchesCount}
+        isLiveActive={onlyLive}
+        onToggleLive={() => setOnlyLive((prev) => !prev)}
         days={days}
         selectedDate={currentDay?.date}
         onSelectDate={selectDateByStr}
@@ -681,6 +711,9 @@ function JogosDeHoje() {
                   isFavorite={isFavorite}
                   onToggleFavorite={toggleFavorite}
                   onOpenDetails={() => setActiveMatch(match)}
+                  hasMatchAlert={isMatchAlertActive(match.id)}
+                  onToggleMatchAlert={() => toggleMatchAlert(match.id)}
+                  onOpenLineup={() => setLineupMatch(match)}
                   theme={getTimeSlotTheme(3)} // Gold/Amber theme for favorites
                   highlightFavorite
                 />
@@ -722,6 +755,9 @@ function JogosDeHoje() {
                         isFavorite={isFavorite}
                         onToggleFavorite={toggleFavorite}
                         onOpenDetails={() => setActiveMatch(match)}
+                        hasMatchAlert={isMatchAlertActive(match.id)}
+                        onToggleMatchAlert={() => toggleMatchAlert(match.id)}
+                        onOpenLineup={() => setLineupMatch(match)}
                         theme={theme}
                       />
                     ))}
@@ -769,16 +805,23 @@ function JogosDeHoje() {
           isLiked={isLiked(activeMatch.id)}
           likeCount={getLikeCount(activeMatch.id)}
           onToggleLike={() => toggleLike(activeMatch.id)}
+          hasMatchAlert={isMatchAlertActive(activeMatch.id)}
+          onToggleMatchAlert={() => toggleMatchAlert(activeMatch.id)}
+          onOpenLineup={() => setLineupMatch(activeMatch)}
         />
       )}
 
-      {/* FAVORITE TEAMS MODAL */}
+      {/* FAVORITE TEAMS & CHAMPIONSHIPS MODAL */}
       <FavoritesModal
         isOpen={showFavoritesModal}
         onClose={() => setShowFavoritesModal(false)}
         favorites={favorites}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
+        favoriteChampionships={favoriteChampionships}
+        isFavoriteChampionship={isFavoriteChampionship}
+        onToggleFavoriteChampionship={toggleFavoriteChampionship}
+        onOpenNotifications={() => setShowNotificationModal(true)}
       />
 
       {/* NOTIFICATIONS & PUSH ALERTS MODAL */}
@@ -786,7 +829,18 @@ function JogosDeHoje() {
         isOpen={showNotificationModal}
         onClose={() => setShowNotificationModal(false)}
         favorites={favorites}
+        favoriteChampionships={favoriteChampionships}
         onOpenFavorites={() => setShowFavoritesModal(true)}
+      />
+
+      {/* LINEUP MODAL */}
+      <LineupModal
+        isOpen={Boolean(lineupMatch)}
+        onClose={() => setLineupMatch(null)}
+        match={lineupMatch}
+        displayDate={currentDay?.displayDate}
+        hasMatchAlert={lineupMatch ? isMatchAlertActive(lineupMatch.id) : false}
+        onToggleMatchAlert={() => lineupMatch && toggleMatchAlert(lineupMatch.id)}
       />
     </div>
   );
@@ -800,6 +854,9 @@ function CompactMatchCard({
   isFavorite,
   onToggleFavorite,
   onOpenDetails,
+  hasMatchAlert = false,
+  onToggleMatchAlert,
+  onOpenLineup,
   theme,
   highlightFavorite = false,
 }: {
@@ -807,6 +864,9 @@ function CompactMatchCard({
   isFavorite: (team: string) => boolean;
   onToggleFavorite: (team: string) => void;
   onOpenDetails: () => void;
+  hasMatchAlert?: boolean;
+  onToggleMatchAlert?: () => void;
+  onOpenLineup?: () => void;
   theme: TimeSlotTheme;
   highlightFavorite?: boolean;
 }) {
@@ -948,8 +1008,45 @@ function CompactMatchCard({
           )}
         </div>
 
-        {/* Quick action buttons on card: WhatsApp, Calendar & Details indicator */}
+        {/* Quick action buttons on card: Escalação, Alerta, WhatsApp, Calendar & Details indicator */}
         <div className="flex items-center gap-1 shrink-0">
+          {onOpenLineup && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenLineup();
+              }}
+              className="flex items-center gap-1 h-7 px-2 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-95 transition cursor-pointer text-[10px] font-bold"
+              title="Ver escalação do jogo"
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Escalação</span>
+            </button>
+          )}
+
+          {onToggleMatchAlert && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleMatchAlert();
+              }}
+              className={`flex h-7 w-7 items-center justify-center rounded-lg transition active:scale-95 cursor-pointer ${
+                hasMatchAlert
+                  ? 'bg-amber-400 text-amber-950 shadow-sm ring-1 ring-amber-300'
+                  : 'bg-muted/80 text-muted-foreground hover:text-amber-500 hover:bg-muted'
+              }`}
+              title={
+                hasMatchAlert
+                  ? 'Alerta ativo para esta partida (clique para desativar)'
+                  : 'Ativar alerta no celular para esta partida'
+              }
+            >
+              <Bell className={`h-3.5 w-3.5 ${hasMatchAlert ? 'fill-current animate-pulse' : ''}`} />
+            </button>
+          )}
+
           <button
             type="button"
             onClick={(e) => {
@@ -973,7 +1070,7 @@ function CompactMatchCard({
             <CalendarPlus className="h-3.5 w-3.5" />
           </a>
 
-          <div className="flex items-center gap-0.5 text-muted-foreground group-hover:text-primary transition-colors pl-1">
+          <div className="flex items-center gap-0.5 text-muted-foreground group-hover:text-primary transition-colors pl-0.5">
             <span className="text-[10px] font-bold hidden sm:inline">Detalhes</span>
             <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </div>
@@ -995,6 +1092,9 @@ function MatchDetailsModal({
   isLiked,
   likeCount,
   onToggleLike,
+  hasMatchAlert = false,
+  onToggleMatchAlert,
+  onOpenLineup,
 }: {
   match: MatchItem;
   displayDate?: string;
@@ -1004,6 +1104,9 @@ function MatchDetailsModal({
   isLiked: boolean;
   likeCount: number;
   onToggleLike: () => void;
+  hasMatchAlert?: boolean;
+  onToggleMatchAlert?: () => void;
+  onOpenLineup?: () => void;
 }) {
   const homeFav = isFavorite(match.team_home);
   const awayFav = isFavorite(match.team_away);
@@ -1169,16 +1272,16 @@ function MatchDetailsModal({
           </div>
         </div>
 
-        {/* LINHA INFERIOR: AÇÕES ALINHADAS (Curtir, Google Calendar, WhatsApp, Fechar) */}
+        {/* LINHA INFERIOR: AÇÕES ALINHADAS (Curtir, Escalação, Alerta, Google Calendar, WhatsApp, Fechar) */}
         <div className="relative z-10 pt-3 border-t border-border/60 flex items-center justify-between gap-2 min-w-0">
-          {/* Lado esquerdo: Três ícones alinhados (Coração com contador, Agenda Google e WhatsApp) */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* 1. Curtir: apenas ícone de coração com contador de curtidas (sem o texto 'Curtir jogo') */}
+          {/* Lado esquerdo: Ações rápidas */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* 1. Curtir: apenas ícone de coração com contador de curtidas */}
             <button
               type="button"
               onClick={onToggleLike}
               title={isLiked ? "Descurtir jogo" : "Curtir jogo"}
-              className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-10 px-3.5 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
+              className={`inline-flex shrink-0 items-center justify-center gap-1.5 h-10 px-3 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 ${
                 isLiked
                   ? "bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm"
                   : "bg-muted/40 border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -1189,7 +1292,43 @@ function MatchDetailsModal({
               <span className="font-extrabold">{likeCount}</span>
             </button>
 
-            {/* 2. Lembrete na agenda (Google Calendar): botão com ícone e legenda */}
+            {/* 2. Escalação da partida */}
+            {onOpenLineup && (
+              <button
+                type="button"
+                onClick={onOpenLineup}
+                title="Ver escalação oficial e provável da partida"
+                className="inline-flex shrink-0 h-10 items-center justify-center gap-1.5 px-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 active:scale-95 transition cursor-pointer text-xs font-bold shadow-sm"
+              >
+                <Users className="h-4 w-4" />
+                <span>Escalação</span>
+              </button>
+            )}
+
+            {/* 3. Alerta Individual da Partida */}
+            {onToggleMatchAlert && (
+              <button
+                type="button"
+                onClick={onToggleMatchAlert}
+                title={hasMatchAlert ? "Alerta individual ativo" : "Ativar alerta no celular para este jogo"}
+                className={`inline-flex shrink-0 h-10 items-center justify-center gap-1.5 px-3 rounded-xl border text-xs font-bold transition cursor-pointer active:scale-95 shadow-sm ${
+                  hasMatchAlert
+                    ? "bg-amber-400 text-amber-950 border-amber-300 shadow-amber-400/20 ring-1 ring-amber-300"
+                    : "border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`}
+              >
+                {hasMatchAlert ? (
+                  <BellRing className="h-4 w-4 fill-current animate-pulse" />
+                ) : (
+                  <Bell className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {hasMatchAlert ? "Alerta Ativo" : "Alerta do Jogo"}
+                </span>
+              </button>
+            )}
+
+            {/* 4. Lembrete na agenda (Google Calendar) */}
             <button
               type="button"
               onClick={() => window.open(calendarUrl, "_blank", "noopener,noreferrer")}
@@ -1200,7 +1339,7 @@ function MatchDetailsModal({
               <CalendarPlus className="h-4 w-4" />
             </button>
 
-            {/* 3. WhatsApp: botão com ícone e legenda */}
+            {/* 5. WhatsApp */}
             <button
               type="button"
               onClick={() => shareSingleMatchOnWhatsApp(match, displayDate)}
@@ -1212,7 +1351,7 @@ function MatchDetailsModal({
             </button>
           </div>
 
-          {/* Lado direito: Botão Fechar discreto no fim da linha */}
+          {/* Lado direito: Botão Fechar */}
           <button
             type="button"
             onClick={onClose}

@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Send,
   Star,
+  Trophy,
   Smartphone,
   ShieldCheck,
   X,
@@ -22,6 +23,7 @@ interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   favorites: string[];
+  favoriteChampionships?: string[];
   onOpenFavorites?: () => void;
 }
 
@@ -29,6 +31,7 @@ export function NotificationModal({
   isOpen,
   onClose,
   favorites,
+  favoriteChampionships = [],
   onOpenFavorites,
 }: NotificationModalProps) {
   const {
@@ -49,7 +52,7 @@ export function NotificationModal({
 
   const handleToggle = async () => {
     setFeedbackMessage(null);
-    const result = await toggleSubscription(favorites);
+    const result = await toggleSubscription(favorites, favoriteChampionships);
     setFeedbackMessage(result.message);
   };
 
@@ -219,13 +222,13 @@ export function NotificationModal({
             </div>
           )}
 
-          {/* Times Favoritos Vinculados */}
-          <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          {/* Times e Campeonatos Monitorados */}
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                 <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
-                  Seus Times Monitorados
+                  Seus Alertas de Times & Campeonatos
                 </h4>
               </div>
               {onOpenFavorites && (
@@ -237,41 +240,72 @@ export function NotificationModal({
                   }}
                   className="text-xs font-bold text-primary hover:underline cursor-pointer"
                 >
-                  {favorites.length > 0 ? 'Alterar Times' : '+ Escolher Times'}
+                  Gerenciar
                 </button>
               )}
             </div>
 
-            {favorites.length > 0 ? (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {favorites.map((team) => (
-                  <div
-                    key={team}
-                    className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-2.5 py-1 text-xs font-bold"
-                  >
-                    <TeamBadge teamName={team} size="sm" />
-                    <span>{team}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
+            {/* Times */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground mb-1.5">
+                Times ({favorites.length}):
+              </p>
+              {favorites.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {favorites.map((team) => (
+                    <div
+                      key={team}
+                      className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/60 px-2.5 py-1 text-xs font-bold"
+                    >
+                      <TeamBadge teamName={team} size="sm" />
+                      <span>{team}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Nenhum time individual selecionado.</p>
+              )}
+            </div>
+
+            {/* Campeonatos */}
+            <div className="pt-2 border-t border-border/50">
+              <p className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                Campeonatos com alerta para todos os jogos ({favoriteChampionships.length}):
+              </p>
+              {favoriteChampionships.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {favoriteChampionships.map((champ) => (
+                    <span
+                      key={champ}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300"
+                    >
+                      <span>🏆</span>
+                      <span>{champ}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Nenhum campeonato completo selecionado.</p>
+              )}
+            </div>
+
+            {favorites.length === 0 && favoriteChampionships.length === 0 && onOpenFavorites && (
               <div className="rounded-xl border border-dashed border-border p-3 text-center">
                 <p className="text-xs text-muted-foreground">
-                  Nenhum time favoritado ainda. Você receberá notificações dos principais jogos do dia.
+                  Você ainda não escolheu times ou campeonatos.
                 </p>
-                {onOpenFavorites && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onOpenFavorites();
-                    }}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-400/30 transition cursor-pointer"
-                  >
-                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    Escolher meus times agora
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenFavorites();
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-400/30 transition cursor-pointer"
+                >
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  Escolher times e campeonatos
+                </button>
               </div>
             )}
           </div>

@@ -74,6 +74,9 @@ interface SiteHeaderProps {
   onOpenFavorites?: () => void;
   onOpenNotifications?: () => void;
   isNotificationsActive?: boolean;
+  liveMatchesCount?: number;
+  isLiveActive?: boolean;
+  onToggleLive?: () => void;
   days?: DaySchedule[];
   selectedDate?: string;
   onSelectDate?: (dateStr: string) => void;
@@ -94,6 +97,9 @@ export function SiteHeader({
   onOpenFavorites,
   onOpenNotifications,
   isNotificationsActive,
+  liveMatchesCount = 0,
+  isLiveActive = false,
+  onToggleLive,
   days,
   selectedDate,
   onSelectDate,
@@ -153,7 +159,7 @@ export function SiteHeader({
           {/* Brand + Live Timestamp */}
           <Link to="/" className="flex items-center gap-2.5 group min-w-0 shrink-0">
             <img
-              src="/logo.png"
+              src="/logo.png?v=3"
               alt="Logo Jogos de Hoje"
               className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_0_16px_rgba(16,185,129,0.4)] ring-1 ring-emerald-400/60 group-hover:scale-105 transition-transform"
             />
@@ -196,8 +202,8 @@ export function SiteHeader({
           >
             <Link
               to="/"
-              className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition whitespace-nowrap ${
-                activePage === 'matches'
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                activePage === 'matches' && !isLiveActive
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
@@ -207,8 +213,32 @@ export function SiteHeader({
             </Link>
 
             <Link
+              to="/"
+              search={{ live: 'true' }}
+              onClick={() => {
+                if (onToggleLive) onToggleLive();
+              }}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                isLiveActive
+                  ? 'bg-rose-600 text-white shadow-sm ring-1 ring-rose-400'
+                  : 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10'
+              }`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+              </span>
+              <span>Jogos ao Vivo</span>
+              {liveMatchesCount > 0 && (
+                <span className="rounded-full bg-rose-500/20 px-1.5 py-0.2 text-[10px] font-black text-rose-700 dark:text-rose-300">
+                  {liveMatchesCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
               to="/brasileirao"
-              className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+              className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                 activePage === 'brasileirao'
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -451,19 +481,43 @@ export function SiteHeader({
         >
           <Link
             to="/"
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
-              activePage === 'matches'
+            className={`flex-1 flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+              activePage === 'matches' && !isLiveActive
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <Calendar className="h-3.5 w-3.5 shrink-0" />
-            <span>Jogos de Hoje</span>
+            <span>Hoje</span>
+          </Link>
+
+          <Link
+            to="/"
+            search={{ live: 'true' }}
+            onClick={() => {
+              if (onToggleLive) onToggleLive();
+            }}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+              isLiveActive
+                ? 'bg-rose-600 text-white shadow-sm ring-1 ring-rose-400'
+                : 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10'
+            }`}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+            </span>
+            <span>Ao Vivo</span>
+            {liveMatchesCount > 0 && (
+              <span className="rounded-full bg-rose-500/20 px-1 py-0.2 text-[9px] font-black text-rose-700 dark:text-rose-300">
+                {liveMatchesCount}
+              </span>
+            )}
           </Link>
 
           <Link
             to="/brasileirao"
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+            className={`flex-1 flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-bold transition whitespace-nowrap ${
               activePage === 'brasileirao'
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -474,7 +528,7 @@ export function SiteHeader({
                 activePage === 'brasileirao' ? '' : 'text-amber-500'
               }`}
             />
-            <span>Brasileirão Série A</span>
+            <span>Brasileirão</span>
           </Link>
         </nav>
       </div>
