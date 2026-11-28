@@ -14,7 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      push_subscriptions: {
+        Row: {
+          id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          favorite_teams: string[];
+          favorite_championships: string[];
+          notify_pregame: boolean;
+          notify_kickoff: boolean;
+          notify_goals: boolean;
+          notify_halftime: boolean;
+          notify_end: boolean;
+          notify_lineups: boolean;
+          notify_table_change: boolean;
+          user_agent: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          favorite_teams?: string[];
+          favorite_championships?: string[];
+          notify_pregame?: boolean;
+          notify_kickoff?: boolean;
+          notify_goals?: boolean;
+          notify_halftime?: boolean;
+          notify_end?: boolean;
+          notify_lineups?: boolean;
+          notify_table_change?: boolean;
+          user_agent?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          endpoint?: string;
+          p256dh?: string;
+          auth?: string;
+          favorite_teams?: string[];
+          favorite_championships?: string[];
+          notify_pregame?: boolean;
+          notify_kickoff?: boolean;
+          notify_goals?: boolean;
+          notify_halftime?: boolean;
+          notify_end?: boolean;
+          notify_lineups?: boolean;
+          notify_table_change?: boolean;
+          user_agent?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      matches: {
+        Row: {
+          id: string;
+          date: string;
+          match_title: string;
+          team_home: string;
+          team_away: string;
+          championship: string;
+          time_br: string;
+          channels: Json;
+          channel_types: string[];
+          source: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          date: string;
+          match_title: string;
+          team_home: string;
+          team_away: string;
+          championship: string;
+          time_br: string;
+          channels?: Json;
+          channel_types?: string[];
+          source?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          date?: string;
+          match_title?: string;
+          team_home?: string;
+          team_away?: string;
+          championship?: string;
+          time_br?: string;
+          channels?: Json;
+          channel_types?: string[];
+          source?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      sent_notifications_log: {
+        Row: {
+          id: string;
+          match_id: string;
+          event_type: string;
+          title: string;
+          body: string;
+          recipient_count: number;
+          sent_at: string;
+        };
+        Insert: {
+          id?: string;
+          match_id: string;
+          event_type: string;
+          title: string;
+          body: string;
+          recipient_count?: number;
+          sent_at?: string;
+        };
+        Update: {
+          id?: string;
+          match_id?: string;
+          event_type?: string;
+          title?: string;
+          body?: string;
+          recipient_count?: number;
+          sent_at?: string;
+        };
+        Relationships: [];
+      };
+      sync_logs: {
+        Row: {
+          id: string;
+          last_sync_at: string;
+          status: string;
+          total_matches: number | null;
+          message: string | null;
+          source: string | null;
+        };
+        Insert: {
+          id?: string;
+          last_sync_at?: string;
+          status: string;
+          total_matches?: number | null;
+          message?: string | null;
+          source?: string | null;
+        };
+        Update: {
+          id?: string;
+          last_sync_at?: string;
+          status?: string;
+          total_matches?: number | null;
+          message?: string | null;
+          source?: string | null;
+        };
+        Relationships: [];
+      };
     }
     Views: {
       [_ in never]: never

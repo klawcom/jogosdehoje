@@ -40,6 +40,8 @@ import { SiteHeader } from '../components/site-header';
 import { TeamBadge } from '../components/team-badge';
 import { FloatingWhatsAppButton } from '../components/floating-whatsapp-button';
 import { FavoritesModal } from '../components/favorites-modal';
+import { NotificationModal } from '../components/notification-modal';
+import { usePushNotifications } from '../lib/push-notifications';
 
 type MobileSectionTab = 'classificacao' | 'estatisticas';
 type StatCategoryTab = 'goals' | 'assists' | 'yellow' | 'red' | 'clubs';
@@ -170,9 +172,11 @@ function BrasileiraoTabelaPage() {
   const [statQuery, setStatQuery] = useState('');
   const [showAllStats, setShowAllStats] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const { isDark, toggleTheme } = useTheme();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { isSubscribed: isNotificationsActive } = usePushNotifications();
 
   useEffect(() => {
     if (searchParams?.tab) {
@@ -389,6 +393,8 @@ function BrasileiraoTabelaPage() {
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
         onOpenFavorites={() => setShowFavoritesModal(true)}
+        onOpenNotifications={() => setShowNotificationModal(true)}
+        isNotificationsActive={isNotificationsActive}
       />
 
       <main className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 pt-4 sm:pt-5">
@@ -1316,6 +1322,13 @@ function BrasileiraoTabelaPage() {
         favorites={favorites}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
+      />
+
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        favorites={favorites}
+        onOpenFavorites={() => setShowFavoritesModal(true)}
       />
     </div>
   );

@@ -32,6 +32,8 @@ import { SiteHeader } from "../components/site-header";
 import { TeamBadge } from "../components/team-badge";
 import { FloatingWhatsAppButton } from "../components/floating-whatsapp-button";
 import { FavoritesModal } from "../components/favorites-modal";
+import { NotificationModal } from "../components/notification-modal";
+import { usePushNotifications } from "../lib/push-notifications";
 import { useFavorites } from "../lib/favorites";
 import { useLikes } from "../lib/likes";
 import { scrapeGoalMatches, getBrasiliaTimeString } from "../lib/scraper";
@@ -219,6 +221,7 @@ function JogosDeHoje() {
   const [selectedChannelType, setSelectedChannelType] = useState<ChannelType | "all">("all");
   const [onlyLive, setOnlyLive] = useState(false);
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   // Active match for details modal/page
   const [activeMatch, setActiveMatch] = useState<MatchItem | null>(null);
@@ -226,6 +229,7 @@ function JogosDeHoje() {
   const { isDark, toggleTheme } = useTheme();
   const { favorites, toggleFavorite, isFavorite, matchHasFavorite } = useFavorites();
   const { isLiked, getLikeCount, toggleLike } = useLikes();
+  const { isSubscribed: isNotificationsActive } = usePushNotifications();
 
   useEffect(() => {
     if (!days || days.length === 0) return;
@@ -424,6 +428,8 @@ function JogosDeHoje() {
         onToggleTheme={toggleTheme}
         favoritesCount={favorites.length}
         onOpenFavorites={() => setShowFavoritesModal(true)}
+        onOpenNotifications={() => setShowNotificationModal(true)}
+        isNotificationsActive={isNotificationsActive}
         days={days}
         selectedDate={currentDay?.date}
         onSelectDate={selectDateByStr}
@@ -773,6 +779,14 @@ function JogosDeHoje() {
         favorites={favorites}
         isFavorite={isFavorite}
         onToggleFavorite={toggleFavorite}
+      />
+
+      {/* NOTIFICATIONS & PUSH ALERTS MODAL */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        favorites={favorites}
+        onOpenFavorites={() => setShowFavoritesModal(true)}
       />
     </div>
   );

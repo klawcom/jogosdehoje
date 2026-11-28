@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   ChevronRight,
+  Bell,
+  BellRing,
 } from 'lucide-react';
 import { DaySchedule } from '../lib/types';
 import { getBrasiliaDateString } from '../lib/scraper';
@@ -70,6 +72,8 @@ interface SiteHeaderProps {
   onToggleTheme: () => void;
   favoritesCount: number;
   onOpenFavorites?: () => void;
+  onOpenNotifications?: () => void;
+  isNotificationsActive?: boolean;
   days?: DaySchedule[];
   selectedDate?: string;
   onSelectDate?: (dateStr: string) => void;
@@ -88,6 +92,8 @@ export function SiteHeader({
   onToggleTheme,
   favoritesCount,
   onOpenFavorites,
+  onOpenNotifications,
+  isNotificationsActive,
   days,
   selectedDate,
   onSelectDate,
@@ -252,6 +258,30 @@ export function SiteHeader({
               </button>
             )}
 
+            {onOpenNotifications && (
+              <button
+                type="button"
+                onClick={onOpenNotifications}
+                className={`relative flex items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 py-2 text-xs font-bold transition cursor-pointer ${
+                  isNotificationsActive
+                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/30'
+                    : 'border-border bg-background/70 text-foreground hover:border-emerald-500/60 hover:bg-background'
+                }`}
+                title="Alertas e Notificações no Celular"
+                aria-label="Configurar alertas e notificações"
+              >
+                {isNotificationsActive ? (
+                  <BellRing className="h-4 w-4 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                ) : (
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                )}
+                <span className="hidden sm:inline">Alertas</span>
+                {isNotificationsActive && (
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                )}
+              </button>
+            )}
+
             <div className="relative">
               <button
                 type="button"
@@ -382,6 +412,31 @@ export function SiteHeader({
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     </Link>
+
+                    {onOpenNotifications && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          onOpenNotifications();
+                        }}
+                        className="w-full text-left flex items-center gap-3 rounded-xl px-2.5 py-2 transition hover:bg-muted/70 text-foreground border border-transparent cursor-pointer"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-500/35 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                          <BellRing className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-extrabold truncate">
+                            Alertas e Notificações no Celular
+                          </p>
+                          <p className="text-[11px] text-muted-foreground truncate">
+                            Gols, escalações e início dos jogos
+                          </p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

@@ -92,3 +92,54 @@ CREATE POLICY "Gravação de logs" ON sync_logs
 --   );
 --   $$
 -- );
+
+-- ==============================================================================
+-- 5. NOTIFICAÇÕES PUSH EM SEGUNDO PLANO (WEB PUSH API)
+-- ==============================================================================
+
+-- Tabela de Inscrições de Celulares e Dispositivos
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  favorite_teams TEXT[] NOT NULL DEFAULT '{}',
+  favorite_championships TEXT[] NOT NULL DEFAULT '{}',
+  notify_pregame BOOLEAN NOT NULL DEFAULT true,       -- Alerta 10 min antes
+  notify_kickoff BOOLEAN NOT NULL DEFAULT true,       -- Início de partida
+  notify_goals BOOLEAN NOT NULL DEFAULT true,         -- Gols em tempo real
+  notify_halftime BOOLEAN NOT NULL DEFAULT false,     -- Intervalo
+  notify_end BOOLEAN NOT NULL DEFAULT true,           -- Fim de jogo
+  notify_lineups BOOLEAN NOT NULL DEFAULT true,       -- Escalação oficial
+  notify_table_change BOOLEAN NOT NULL DEFAULT true,  -- Subiu / caiu na tabela
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_subs_endpoint ON push_subscriptions (endpoint);
+CREATE INDEX IF NOT EXISTS idx_push_subs_teams ON push_subscriptions USING gin (favorite_teams);
+
+-- Tabela de Histórico de Notificações Enviadas (Garante idempotência / sem repetições)
+CREATE TABLE IF NOT EXISTS sent_notifications_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  match_id TEXT NOT NULL,
+  event_type TEXT NOT NULL, -- 'pregame', 'kickoff', 'goal_home_X', 'goal_away_Y', 'lineup', 'end', 'table'
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  recipient_count INT DEFAULT 0,
+  sent_at TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT uq_match_event UNIQUE (match_id, event_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sent_notif_match ON sent_notifications_log (match_id);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sent_notifications_log ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Acesso a inscrições push" ON push_subscriptions
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Acesso a logs de notificações" ON sent_notifications_log
+  FOR ALL USING (true) WITH CHECK (true);
+

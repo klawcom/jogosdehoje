@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { PwaInstallBanner } from "../components/pwa-install-banner";
+import { registerServiceWorker } from "../lib/push-notifications";
 
 function NotFoundComponent() {
   return (
@@ -31,6 +33,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#061c12" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Jogos de Hoje" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "Jogos de Hoje" },
       { title: "Jogos de Hoje — Futebol na TV e Streaming" },
       { name: "description", content: "Confira todos os jogos de futebol de hoje com horários de Brasília e onde assistir na TV aberta, TV fechada e streaming." },
       { property: "og:title", content: "Jogos de Hoje — Futebol na TV e Streaming" },
@@ -43,6 +50,7 @@ export const Route = createRootRoute({
       { name: "twitter:image", content: "/logo.png" },
     ],
     links: [
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico?v=2" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png?v=2" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png?v=2" },
@@ -104,6 +112,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Inicialização do Service Worker para PWA e Push Notifications
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   // Hide the "Edit with Lovable" badge if injected dynamically
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -129,5 +142,10 @@ function RootComponent() {
     return () => observer.disconnect();
   }, []);
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <PwaInstallBanner />
+    </>
+  );
 }
